@@ -31,13 +31,13 @@ import java.lang.annotation.Target;
 /**
  * Command methods that require a specific permission node should be annotated with this.
  */
-@Target (ElementType.METHOD)
-@Retention (RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Permissible {
-	/**
-	 * Returns the permission node associated with this command.
-	 *
-	 * @return permission node
-	 */
-	public String value();
+    /**
+     * Returns the permission node associated with this command.
+     *
+     * @return permission node
+     */
+    public String value();
 }

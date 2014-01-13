@@ -33,8 +33,8 @@ import com.flowpowered.commands.filter.CommandFilter;
 /**
  * Represents a filter of a command. Specified filter class must have an empty constructor.
  */
-@Target (ElementType.METHOD)
-@Retention (RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Filter {
     /**
      * Filters to validate before execution.

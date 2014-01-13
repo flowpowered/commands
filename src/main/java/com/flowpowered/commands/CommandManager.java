@@ -75,6 +75,7 @@ public class CommandManager {
     public void setPath(Command command, String... path) throws CommandException {
         setPath(Arrays.asList(path), command);
     }
+
     public void setPath(List<String> path, Command command) throws CommandException {
         int last = path.size() - 1;
         getCommandByPath(path.subList(0, last)).insertChild(path.get(last), command);
@@ -83,6 +84,7 @@ public class CommandManager {
     public Command clearPath(String... alias) throws CommandException {
         return clearPath(Arrays.asList(alias));
     }
+
     public Command clearPath(List<String> alias) throws CommandException {
         int last = alias.size() - 1;
         return getCommandByPath(alias.subList(0, last)).removeChild(alias.get(last));
@@ -131,7 +133,7 @@ public class CommandManager {
 
     public void addAlias(List<String> path, List<String> destination) throws CommandException, AliasAlreadyCreatedException {
         int last = path.size() - 1;
-        addAlias(getCommandByPath(path.subList(0, last)), path.get(last),  destination);
+        addAlias(getCommandByPath(path.subList(0, last)), path.get(last), destination);
     }
 
     public void addAlias(Command parent, String name, List<String> destination) throws AliasAlreadyCreatedException {

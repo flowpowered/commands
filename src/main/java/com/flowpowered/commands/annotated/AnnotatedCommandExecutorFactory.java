@@ -68,8 +68,8 @@ public final class AnnotatedCommandExecutorFactory {
                 logger.warn("Unable to register " + method.getName() + " as a command, method can only have 2 parameters");
                 return false;
             }
-            if ((CommandSender.class.isAssignableFrom(params[0]) || CommandSender.class.isAssignableFrom(params[1])) &&
-                    (CommandArguments.class.equals(params[0]) || CommandArguments.class.equals(params[1])))	{
+            if ((CommandSender.class.isAssignableFrom(params[0]) || CommandSender.class.isAssignableFrom(params[1]))
+                    && (CommandArguments.class.equals(params[0]) || CommandArguments.class.equals(params[1]))) {
                 return true;
             } else {
                 logger.warn("Unable to register " + method.getName() + " as a command, method parameters must be CommandSender and CommandArguments");

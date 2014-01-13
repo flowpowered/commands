@@ -23,7 +23,6 @@
  */
 package com.flowpowered.chat;
 
-
 public interface ChannelRichChatReceiver extends ChatReceiver {
 
     public ChatChannel getPrivateMessageChannel();

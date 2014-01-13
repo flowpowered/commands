@@ -101,7 +101,7 @@ public class ConfigurableCommandManager extends CommandManager {
 
         // TODO: add duplication checking
         if (!node.hasChild(COMMAND_SELF_KEY)) {
-            //TODO: Maybe we should create blank command to allow admins organize their command better?
+            // TODO: Maybe we should create blank command to allow admins organize their command better?
             throw new IllegalStateException("Malformed configuration! Must have command at every node!");
         }
         List<String> alias = node.getChild(COMMAND_SELF_KEY).getStringList();

@@ -131,17 +131,17 @@
             <version>0.1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-		<dependency>
-			<groupId>org.spout</groupId>
-			<artifactId>cereal</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+        <dependency>
+            <groupId>org.spout</groupId>
+            <artifactId>cereal</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>12.0</version>
-		</dependency>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>12.0</version>
+        </dependency>
     </dependencies>
 
     <!-- Build configuration -->

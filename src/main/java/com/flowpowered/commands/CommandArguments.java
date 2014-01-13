@@ -58,7 +58,6 @@ public class CommandArguments {
         this.flags = new CommandFlags(this);
     }
 
-
     public CommandArguments(String... args) {
         this(Arrays.asList(args));
     }
@@ -187,9 +186,7 @@ public class CommandArguments {
         }
     }
 
-    private static final Pattern QUOTE_START_REGEX = Pattern.compile("^('|\")"),
-            QUOTE_END_REGEX = Pattern.compile("[^\\\\]?('|\")$"),
-            QUOTE_ESCAPE_REGEX = Pattern.compile("\\\\([\"'])");
+    private static final Pattern QUOTE_START_REGEX = Pattern.compile("^('|\")"), QUOTE_END_REGEX = Pattern.compile("[^\\\\]?('|\")$"), QUOTE_ESCAPE_REGEX = Pattern.compile("\\\\([\"'])");
 
     /**
      * Return the current argument, without advancing the argument index.
