@@ -25,7 +25,6 @@ package com.flowpowered.chat;
 
 import java.util.Set;
 
-import com.flowpowered.commands.CommandSender;
 import com.flowpowered.commons.Named;
 
 public abstract class ChatChannel implements Named {
@@ -41,24 +40,24 @@ public abstract class ChatChannel implements Named {
         return this.name;
     }
 
-    public abstract Set<CommandSender> getReceivers();
+    public abstract Set<ChatReceiver> getReceivers();
 
-    public boolean isReceiver(CommandSender sender) {
+    public boolean isReceiver(ChatReceiver sender) {
         return getReceivers().contains(sender);
     }
 
     public void broadcast(String message) {
-        for (CommandSender receiver : getReceivers()) {
+        for (ChatReceiver receiver : getReceivers()) {
             sendMessage(message, receiver);
         }
     }
 
-    public void broadcast(CommandSender from, String message) {
+    public void broadcast(ChatReceiver from, String message) {
         // TODO: Once we have formats, use the sender somehow
         broadcast(message);
     }
 
-    public void sendMessage(String message, CommandSender to) {
+    public void sendMessage(String message, ChatReceiver to) {
         to.sendMessageRaw(message, MSG_TYPE_PREFIX + this.name);
     }
 

@@ -26,7 +26,6 @@ package com.flowpowered.chat;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.flowpowered.commands.CommandSender;
 import com.flowpowered.permissions.PermissionDomain;
 import com.flowpowered.permissions.PermissionSubject;
 
@@ -41,20 +40,20 @@ public class PermissionChatChannel extends ChatChannel {
     }
 
     @Override
-    public Set<CommandSender> getReceivers() {
+    public Set<ChatReceiver> getReceivers() {
         Set<PermissionSubject> permitted = this.domain.getAllWithPermission(this.permission);
-        Set<CommandSender> receivers = new HashSet<CommandSender>();
+        Set<ChatReceiver> receivers = new HashSet<ChatReceiver>();
         // FIXME: Optimize this - if we find a quick way of comparing sets, we can set up some kind of cache, and use cached receiver list if the subject list is the same.
         for (PermissionSubject subject : permitted) {
-            if (subject instanceof CommandSender) {
-                receivers.add((CommandSender) subject);
+            if (subject instanceof ChatReceiver) {
+                receivers.add((ChatReceiver) subject);
             }
         }
         return receivers;
     }
 
     @Override
-    public boolean isReceiver(CommandSender sender) {
+    public boolean isReceiver(ChatReceiver sender) {
         return sender.hasPermission(this.permission, this.domain);
     }
 }

@@ -26,24 +26,22 @@ package com.flowpowered.chat;
 import java.util.Collections;
 import java.util.Set;
 
-import com.flowpowered.commands.CommandSender;
-
 public class PrivateMessageChannel extends ChatChannel {
-    private CommandSender receiver;
+    private ChatReceiver receiver;
 
-    public PrivateMessageChannel(String name, CommandSender receiver) {
+    public PrivateMessageChannel(String name, ChatReceiver receiver) {
         super(name);
         this.receiver = receiver;
     }
 
     @Override
-    public Set<CommandSender> getReceivers() {
-        return Collections.singleton(receiver);
+    public Set<ChatReceiver> getReceivers() {
+        return Collections.singleton(this.receiver);
     }
 
     @Override
-    public boolean isReceiver(CommandSender sender) {
-        return sender == receiver;
+    public boolean isReceiver(ChatReceiver sender) {
+        return sender == this.receiver;
     }
 
 }

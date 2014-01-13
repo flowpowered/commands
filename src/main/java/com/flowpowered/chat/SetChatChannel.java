@@ -28,36 +28,34 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import com.flowpowered.commands.CommandSender;
-
 public class SetChatChannel extends ChatChannel {
-    private final Set<CommandSender> receivers;
+    private final Set<ChatReceiver> receivers;
 
     public SetChatChannel(String name) {
         super(name);
-        receivers = new ConcurrentSkipListSet<>();
+        this.receivers = new ConcurrentSkipListSet<>();
     }
 
-    public SetChatChannel(String name, Set<CommandSender> receivers) {
+    public SetChatChannel(String name, Set<ChatReceiver> receivers) {
         super(name);
         this.receivers = new HashSet<>(receivers);
     }
 
     @Override
-    public Set<CommandSender> getReceivers() {
-        return Collections.unmodifiableSet(receivers);
+    public Set<ChatReceiver> getReceivers() {
+        return Collections.unmodifiableSet(this.receivers);
     }
 
     @Override
-    public boolean isReceiver(CommandSender sender) {
-        return receivers.contains(sender);
+    public boolean isReceiver(ChatReceiver sender) {
+        return this.receivers.contains(sender);
     }
 
-    public boolean addReceiver(CommandSender sender) {
-        return receivers.add(sender);
+    public boolean addReceiver(ChatReceiver sender) {
+        return this.receivers.add(sender);
     }
 
-    public boolean removeReceiver(CommandSender sender) {
-        return receivers.remove(sender);
+    public boolean removeReceiver(ChatReceiver sender) {
+        return this.receivers.remove(sender);
     }
 }

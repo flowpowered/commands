@@ -23,9 +23,8 @@
  */
 package com.flowpowered.chat;
 
-import com.flowpowered.commands.CommandSender;
 
-public interface ChannelRichCommandSender extends CommandSender {
+public interface ChannelRichChatReceiver extends ChatReceiver {
 
     public ChatChannel getPrivateMessageChannel();
 

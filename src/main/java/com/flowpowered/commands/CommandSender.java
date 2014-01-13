@@ -23,16 +23,9 @@
  */
 package com.flowpowered.commands;
 
-import com.flowpowered.commons.Named;
-import com.flowpowered.permissions.PermissionSubject;
+import com.flowpowered.chat.ChatReceiver;
 
-public interface CommandSender extends PermissionSubject, Named {
-
-    void sendMessage(String message);
-
-    void sendMessage(CommandSender from, String message);
-
-    void sendMessageRaw(String message, String type);
+public interface CommandSender extends ChatReceiver {
 
     void processCommand(String commandLine) throws CommandException;
 
