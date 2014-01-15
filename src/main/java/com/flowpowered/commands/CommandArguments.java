@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 
-import org.spout.math.vector.Vector3f;
+import com.flowpowered.math.vector.Vector3f;
 
 /**
  * This class is used as a wrapper for command arguments to make them easily
