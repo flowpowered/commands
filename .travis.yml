@@ -26,5 +26,5 @@ env:
     # Make the log output cleaner
     - TERM=dumb
     # Super secure, encrypted variables! Ssssh!
-    - secure: "atVZIYRSONktGK17OxNj9SRBk8KyKmvICNANjfdtQA7q0j31bGtjk3tQi5kOn3nZcgicWY1nickl6QEhySjuzhDcqtuPILNK4hwCKvs4WmblG5SnhGq/AW+13lRYD2wUGTSqYrueZuJ3I4VmUuVxlmPL5sLZ4IDK9bkfmmKJwLs="
+    - secure: "acSpEM4iUx0LPgFAHTIrzectpbLFpzLGP23tAzydRCBPz4ilQ7+MxOBnj/GjNONDpqY8UDbeGvO6XNIw4vwTxQ1vryA5dsy4Zsu+AfVW9fSDMXCVnHyB8NYNW3PLfZjFlacLTzJEBhbJH6wLc4mGPhGvjXozkRhMQpISocv4O3Y="
     - secure: "dYxht0E8/0zXxIPZ7ho3GgtxEVHqmka8XyZobNUe3FVEprqQnCuxlXA+O5t8pqjjEDPVbAgupOyO8KyhCfFTYoIIsg+RiEWJZwxWujS3368WVSk5V/OKWPCRKNx2vX66YBMeNBom/WwwRlyF5G2TXIp2X5RRdLBuYsX2plSopKE="
