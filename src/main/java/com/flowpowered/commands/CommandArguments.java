@@ -102,6 +102,10 @@ public class CommandArguments {
         return this.index < this.args.size();
     }
 
+    public int remaining() {
+        return this.args.size() - this.index;
+    }
+
     public CommandFlags flags() {
         return this.flags;
     }
