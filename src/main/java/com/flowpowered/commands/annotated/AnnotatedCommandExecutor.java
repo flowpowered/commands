@@ -58,8 +58,8 @@ public final class AnnotatedCommandExecutor implements CommandExecutor {
                 } else {
                     ret = method.invoke(instance, args, sender);
                 }
-                if (ret instanceof Boolean && ((Boolean) ret).booleanValue()) {
-                    return true;
+                if (ret instanceof Boolean && !((Boolean) ret).booleanValue()) {
+                    return false;
                 }
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
@@ -72,6 +72,6 @@ public final class AnnotatedCommandExecutor implements CommandExecutor {
                 throw new WrappedCommandException(e);
             }
         }
-        return false;
+        return true;
     }
 }
