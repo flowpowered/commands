@@ -37,6 +37,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.flowpowered.commands.exception.InsufficientPermissionsException;
+import com.flowpowered.commands.exception.UnknownSubcommandException;
 import com.flowpowered.commands.filter.CommandFilter;
 import com.flowpowered.commons.Named;
 
@@ -69,7 +71,7 @@ public class Command implements Named {
      */
     protected void process(CommandSender sender, CommandArguments args, ProcessingMode mode) throws CommandException {
         if (!hasPermission(sender)) {
-            throw new CommandException("Not enough permissions to execute this command.");
+            throw new InsufficientPermissionsException("Not enough permissions to execute this command.", this.permission);
         }
 
         for (CommandFilter filter : this.filters) {
@@ -84,11 +86,7 @@ public class Command implements Named {
 
     protected void processChild(CommandSender sender, CommandArguments args, ProcessingMode mode) throws CommandException {
         String childName;
-        try {
-            childName = args.popSubCommand();
-        } catch (ArgumentParseException e) {
-            return;
-        }
+        childName = args.popSubCommand();
         this.childLock.readLock().lock();
         try {
             Command child = getChild(childName);
@@ -109,6 +107,7 @@ public class Command implements Named {
         } finally {
             this.aliasLock.readLock().unlock();
         }
+        throw new UnknownSubcommandException(this, args.getPastCommandString(), childName);
     }
 
     /**

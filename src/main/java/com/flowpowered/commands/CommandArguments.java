@@ -111,7 +111,7 @@ public class CommandArguments {
     }
 
     public String getPastCommandString() {
-        return this.commandString.toString();
+        return this.commandString.toString().trim();
     }
 
     // State control
@@ -134,7 +134,7 @@ public class CommandArguments {
      * @return The exception -- must be thrown
      */
     public ArgumentParseException failure(String argName, String error, boolean silenceable) {
-        return new ArgumentParseException(this.commandString.toString(), argName, error, silenceable);
+        return new ArgumentParseException(this.commandString.toString().trim(), argName, error, silenceable);
     }
 
     /**

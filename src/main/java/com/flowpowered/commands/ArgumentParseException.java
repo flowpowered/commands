@@ -23,10 +23,12 @@
  */
 package com.flowpowered.commands;
 
+import com.flowpowered.commands.exception.UserFriendlyCommandException;
+
 /**
  * Thrown when an invalid argument is encountered, either from there not being enough input data or invalid input data
  */
-public class ArgumentParseException extends CommandException {
+public class ArgumentParseException extends UserFriendlyCommandException {
     private static final long serialVersionUID = -6994880605421981769L;
     private final String command;
     private final String invalidArgName;
