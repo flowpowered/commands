@@ -25,6 +25,7 @@ package com.flowpowered.commands;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -33,19 +34,33 @@ public class CommandManager {
     private ConcurrentMap<String, Command> allCommands = new ConcurrentHashMap<>();
     private ConcurrentMap<String, ConcurrentMap<String, Command>> commandsByProvider = new ConcurrentHashMap<>();
     private Command rootCommand;
+    private final boolean caseSensitive;
 
     public CommandManager() {
         this(true);
     }
 
     public CommandManager(boolean createRoot) {
+        this(createRoot, true);
+    }
+
+    public CommandManager(boolean createRoot, boolean caseSensitive) {
         if (createRoot) {
             rootCommand = getCommand("flow", "root");
         }
+        this.caseSensitive = caseSensitive;
+    }
+
+    /**
+     * Note: This setting concerns only command child/alias lookup. Unique command names are always case INSENSITIVE.
+     * @return
+     */
+    public boolean isCaseSensitive() {
+        return caseSensitive;
     }
 
     public Command getStoredCommand(String uniqueName) {
-        return allCommands.get(uniqueName);
+        return allCommands.get(uniqueName.toLowerCase(Locale.ENGLISH));
     }
 
     public void onCommandChildChange(Command parent, String nodeName, Command before, Command after) {
@@ -96,13 +111,15 @@ public class CommandManager {
     }
 
     protected Command getCommand(String provider, String name) {
-        Command command = newCommand(provider + ":" + name);
-        Command old = allCommands.putIfAbsent(provider + ":" + name, command);
+        String fullName = provider + ":" + name;
+        provider = provider.toLowerCase(Locale.ENGLISH);
+        Command command = newCommand(fullName);
+        Command old = allCommands.putIfAbsent(fullName.toLowerCase(Locale.ENGLISH), command);
         // If old is null, there wasn't such command before and we've put the new one.
         // Otherwise, there was already such command in the map, and we retrieved it w/o putting the new one in the map.
         if (old == null) {
             commandsByProvider.putIfAbsent(provider, new ConcurrentHashMap<String, Command>());
-            commandsByProvider.get(provider).put(name, command);
+            commandsByProvider.get(provider).put(name.toLowerCase(Locale.ENGLISH), command);
             return command;
         }
         return old;
@@ -121,7 +138,7 @@ public class CommandManager {
     }
 
     public boolean clearCommands(String provider) {
-        ConcurrentMap<String, Command> commands = commandsByProvider.get(provider);
+        ConcurrentMap<String, Command> commands = commandsByProvider.get(provider.toLowerCase(Locale.ENGLISH));
         if (commands == null) {
             return false;
         }
@@ -147,5 +164,12 @@ public class CommandManager {
 
     public void executeCommand(CommandSender sender, CommandArguments args) throws CommandException {
         rootCommand.execute(sender, args);
+    }
+
+    public String normalizeChildName(String name) {
+        if (caseSensitive) {
+            return name;
+        }
+        return name.toLowerCase(Locale.ENGLISH);
     }
 }

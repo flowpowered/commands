@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -56,8 +57,8 @@ public class Command implements Named {
     private String help, usage, desc;
 
     protected Command(String name, CommandManager manager) {
-        this.simpleName = getSimpleName(name);
-        this.name = name;
+        this.simpleName = manager.normalizeChildName(getSimpleName(name));
+        this.name = name.toLowerCase(Locale.ENGLISH);
         this.manager = manager;
     }
 
@@ -86,7 +87,7 @@ public class Command implements Named {
 
     protected void processChild(CommandSender sender, CommandArguments args, ProcessingMode mode) throws CommandException {
         String childName;
-        childName = args.popSubCommand();
+        childName = args.popSubCommand(); // No need to normalize here, as we use getChild(), which normalizes the name itself.
         this.childLock.readLock().lock();
         try {
             Command child = getChild(childName);
@@ -99,7 +100,7 @@ public class Command implements Named {
         }
         this.aliasLock.readLock().lock();
         try {
-            Alias alias = this.aliases.get(childName);
+            Alias alias = this.aliases.get(manager.normalizeChildName(childName)); // Just need to normalize here, cause we directly access the map.
             if (alias != null) {
                 alias.process(sender, args, mode);
                 return;
@@ -281,6 +282,7 @@ public class Command implements Named {
      * @return
      */
     public Command getChild(String name) {
+        name = manager.normalizeChildName(name);
         this.childLock.readLock().lock();
         try {
             Command get = this.children.get(name);
@@ -295,6 +297,7 @@ public class Command implements Named {
     }
 
     public boolean hasChild(String name) {
+        name = manager.normalizeChildName(name);
         this.childLock.readLock().lock();
         try {
             return this.children.containsKey(name);
@@ -316,6 +319,7 @@ public class Command implements Named {
         if (command.getManager() != this.manager) {
             throw new IllegalArgumentException("Tried to put command from different manager.");
         }
+        name = manager.normalizeChildName(name);
         this.childLock.writeLock().lock();
         try {
             Command old = this.children.put(name, command);
@@ -345,6 +349,7 @@ public class Command implements Named {
         if (command.getManager() != this.manager) {
             throw new IllegalArgumentException("Tried to put command from different manager.");
         }
+        name = manager.normalizeChildName(name);
         this.childLock.writeLock().lock();
         try {
             Command previous = this.children.get(name);
@@ -375,6 +380,7 @@ public class Command implements Named {
         if (command.getManager() != this.manager) {
             throw new IllegalArgumentException("Tried to put command from different manager.");
         }
+        name = manager.normalizeChildName(name);
         this.childLock.writeLock().lock();
         try {
             if (this.children.get(name) != null) {
@@ -423,6 +429,7 @@ public class Command implements Named {
      * @return the removed child, or {@code null} if no command was mapped
      */
     public Command removeChild(String name) {
+        name = manager.normalizeChildName(name);
         this.childLock.writeLock().lock();
         try {
             Command old = this.children.remove(name);
@@ -440,6 +447,7 @@ public class Command implements Named {
      * @return
      */
     public Alias getAlias(String name) {
+        name = manager.normalizeChildName(name);
         this.aliasLock.readLock().lock();
         try {
             return this.aliases.get(name);
@@ -455,6 +463,7 @@ public class Command implements Named {
      * @param alias
      */
     public void overwriteAlias(String name, Alias alias) {
+        name = manager.normalizeChildName(name);
         this.aliasLock.writeLock().lock();
         try {
             Alias previous = this.aliases.put(name, alias);
@@ -472,6 +481,7 @@ public class Command implements Named {
      * @throws AliasAlreadyCreatedException
      */
     public void addAlias(String name, Alias alias) throws AliasAlreadyCreatedException {
+        name = manager.normalizeChildName(name);
         this.aliasLock.writeLock().lock();
         try {
             Alias previous = this.aliases.get(name);
@@ -493,6 +503,7 @@ public class Command implements Named {
      * @return the old alias or {@code null} if none existed and {@code alias} was successfully mapped
      */
     public Alias addAliasIfAbsent(String name, Alias alias) {
+        name = manager.normalizeChildName(name);
         this.aliasLock.writeLock().lock();
         try {
             Alias previous = this.aliases.get(name);
@@ -513,6 +524,7 @@ public class Command implements Named {
      * @return the alias that was removed or {@code null} if no alias was mapped
      */
     public Alias removeAlias(String name) {
+        name = manager.normalizeChildName(name);
         this.aliasLock.writeLock().lock();
         try {
             Alias removed = this.aliases.remove(name);
@@ -526,6 +538,7 @@ public class Command implements Named {
     }
 
     public boolean hasAlias(String name) {
+        name = manager.normalizeChildName(name);
         this.aliasLock.readLock().lock();
         try {
             return this.aliases.containsKey(name);
