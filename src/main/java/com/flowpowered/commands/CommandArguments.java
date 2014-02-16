@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 
 /**
@@ -52,6 +53,7 @@ public class CommandArguments {
     private final CommandFlags flags;
     int index = 0;
     private int depth = 0;
+    private boolean currentArgUnescaped = false;
 
     public CommandArguments(List<String> args) {
         this.args = new ArrayList<String>(args);
@@ -104,6 +106,16 @@ public class CommandArguments {
 
     public int remaining() {
         return this.args.size() - this.index;
+    }
+    
+    public Vector2i offsetToArgument(int cursor) {
+        //TODO;
+        return null;
+    }
+    
+    public int argumentToOffset(Vector2i index) {
+        //TODO;
+        return 0;
     }
 
     public CommandFlags flags() {
@@ -167,6 +179,7 @@ public class CommandArguments {
             this.commandString.append(this.args.get(this.index));
             if (!fallbackValue) {
                 this.index++; // And increment index
+                currentArgUnescaped = false;
             }
         }
 
@@ -215,6 +228,11 @@ public class CommandArguments {
 
         // Quoted argument parsing -- comparts and removes unnecessary arguments
         String current = this.args.get(this.index);
+        
+        if (currentArgUnescaped) {
+            return current;
+        }
+        
         Matcher start = QUOTE_START_REGEX.matcher(current);
         if (start.find()) { // We've found a quoted string
             boolean foundEnd = false;
@@ -258,6 +276,7 @@ public class CommandArguments {
                 escape.appendTail(replace);
             }
         }
+        currentArgUnescaped = true;
 
         return current;
     }
@@ -276,6 +295,7 @@ public class CommandArguments {
      * @return Whether there is an argument present at the incremented index
      */
     public boolean advance() {
+        currentArgUnescaped = false;
         return ++this.index < this.args.size();
     }
 
@@ -536,7 +556,11 @@ public class CommandArguments {
     public boolean has(String key) {
         return this.parsedArgs.containsKey(key);
     }
-
+    
+    public boolean hasOverride(String key) {
+        return this.argOverrides.containsKey(key);
+    }
+    
     public String getString(String key) {
         return get(key, String.class);
     }

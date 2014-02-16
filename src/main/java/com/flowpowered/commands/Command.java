@@ -23,6 +23,7 @@
  */
 package com.flowpowered.commands;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -42,6 +44,7 @@ import com.flowpowered.commands.exception.InsufficientPermissionsException;
 import com.flowpowered.commands.exception.UnknownSubcommandException;
 import com.flowpowered.commands.filter.CommandFilter;
 import com.flowpowered.commons.Named;
+import com.flowpowered.math.vector.Vector2i;
 
 public class Command implements Named {
     private final String name;
@@ -153,6 +156,64 @@ public class Command implements Named {
             CommandExecutor executor = command.getExecutor();
             return executor != null && executor.execute(command, sender, args);
         }
+    }
+
+    protected static class Complete implements ProcessingMode {
+        private final int cursor;
+        private List<CharSequence> candidates = null;
+        private int position = -1;
+
+        public Complete(int cursor) {
+            this.cursor = cursor;
+        }
+
+        @Override
+        public boolean step(Command command, CommandSender sender, CommandArguments args) throws CommandException {
+            Vector2i argindex = args.offsetToArgument(cursor); // x is argument index, y is offset in the argument
+            CommandExecutor executor = command.getExecutor();
+            if (executor != null) {
+                if (!(executor instanceof CompletingCommandExecutor)) {
+                    return true;
+                }
+                List<CharSequence> cands = new ArrayList<>();
+                int pos = ((CompletingCommandExecutor) executor).complete(command, sender, args, argindex.getX(), argindex.getY(), cands);
+                if (pos >= 0) {
+                    position = pos;
+                    candidates = cands;
+                    return true;
+                }
+                argindex = args.offsetToArgument(cursor);
+            }
+            if (argindex.getX() > 0) {
+                return false;
+            }
+            String key = CommandArguments.SUBCOMMAND_ARGNAME + args.getDepth();
+            if (args.hasOverride(key)) {
+                return false;
+            }
+            String start = args.currentArgument(key).substring(0, argindex.getY()); // TODO: Make sure we're not off by one.
+            TreeSet<String> children = new TreeSet<>(command.getChildren().keySet());
+            children.addAll(command.getAliases().keySet());
+            SortedSet<String> matches = children.tailSet(start);
+            candidates = new ArrayList<>();
+            for (String match : matches) {
+                if (!match.startsWith(start)) {
+                    break;
+                }
+                candidates.add(match);
+            }
+            position = args.argumentToOffset(new Vector2i(argindex.getX(), 0));
+            return true;
+        }
+
+        public List<CharSequence> getCandidates() {
+            return candidates;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+
     }
 
     protected static class Get implements ProcessingMode {
