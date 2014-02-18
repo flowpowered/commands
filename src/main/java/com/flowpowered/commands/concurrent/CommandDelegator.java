@@ -8,7 +8,6 @@ import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandException;
 import com.flowpowered.commands.CommandExecutor;
 import com.flowpowered.commands.CommandSender;
-import com.flowpowered.commands.FlowCommandsAccess;
 
 public class CommandDelegator implements CommandExecutor {
     private final Queue<Invokation> queue = new ConcurrentLinkedQueue<>();
@@ -29,7 +28,7 @@ public class CommandDelegator implements CommandExecutor {
         CommandArguments args = inv.getArgs();
 
         if (!executor.execute(cmd, sender, args)) {
-            FlowCommandsAccess.processChild(cmd, sender, args, FlowCommandsAccess.EXECUTE);
+            cmd.processChild(sender, args, Command.EXECUTE);
         }
 
         return true;

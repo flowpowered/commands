@@ -70,7 +70,7 @@ public class Command implements Named {
      * @param mode the mode in which to process
      * @throws CommandException
      */
-    protected void process(CommandSender sender, CommandArguments args, ProcessingMode mode) throws CommandException {
+    public void process(CommandSender sender, CommandArguments args, ProcessingMode mode) throws CommandException {
         if (!hasPermission(sender)) {
             throw new InsufficientPermissionsException("Not enough permissions to execute this command.", this.permission);
         }
@@ -85,7 +85,7 @@ public class Command implements Named {
         processChild(sender, args, mode);
     }
 
-    protected void processChild(CommandSender sender, CommandArguments args, ProcessingMode mode) throws CommandException {
+    public void processChild(CommandSender sender, CommandArguments args, ProcessingMode mode) throws CommandException {
         String childName;
         childName = args.popSubCommand(); // No need to normalize here, as we use getChild(), which normalizes the name itself.
         this.childLock.readLock().lock();
@@ -138,16 +138,16 @@ public class Command implements Named {
     /**
      * {@code ProcessingMode} allows different types of processing in {@code process}.
      */
-    protected static interface ProcessingMode {
+    public static interface ProcessingMode {
         /**
          * @return {@code true} if the command processing is done, {@code false} if child commands can be called
          */
         boolean step(Command command, CommandSender sender, CommandArguments args) throws CommandException;
     }
 
-    protected static final Execute EXECUTE = new Execute();
+    public static final Execute EXECUTE = new Execute();
 
-    protected static class Execute implements ProcessingMode {
+    public static class Execute implements ProcessingMode {
         @Override
         public boolean step(Command command, CommandSender sender, CommandArguments args) throws CommandException {
             CommandExecutor executor = command.getExecutor();
@@ -155,7 +155,7 @@ public class Command implements Named {
         }
     }
 
-    protected static class Get implements ProcessingMode {
+    public static class Get implements ProcessingMode {
         private Command command = null;
 
         @Override
