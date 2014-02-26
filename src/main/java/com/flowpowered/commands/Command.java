@@ -173,23 +173,23 @@ public class Command implements Named {
             CommandExecutor executor = command.getExecutor();
             if (executor != null) {
                 if (!(executor instanceof CompletingCommandExecutor)) {
-                    return true;
+                    return true; // We can't complete anything, cause the command doesn't support it. We're done.
                 }
                 List<CharSequence> cands = new ArrayList<>();
                 int pos = ((CompletingCommandExecutor) executor).complete(command, sender, args, argindex.getX(), argindex.getY(), cands);
                 if (pos >= 0) {
                     position = pos;
                     candidates = cands;
-                    return true;
+                    return true; // The executor completed one of it's arguments. Completion is found, we're done.
                 }
                 argindex = args.offsetToArgument(cursor);
             }
             if (argindex.getX() > 0) {
-                return false;
+                return false; // Something further than next arg should be completed, find the child as usual and call us again.
             }
             String key = CommandArguments.SUBCOMMAND_ARGNAME + args.getDepth();
             if (args.hasOverride(key)) {
-                return false;
+                return false; // We have override for next subcommand name, so that's not what we're completing.
             }
             String start = args.currentArgument(key).substring(0, argindex.getY()); // TODO: Make sure we're not off by one.
             TreeSet<String> children = new TreeSet<>(command.getChildren().keySet());

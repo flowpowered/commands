@@ -159,7 +159,7 @@ public class CommandManager {
     }
 
     public void executeCommand(CommandSender sender, String commandString) throws CommandException {
-        executeCommand(sender, new CommandArguments(commandString.split(" ")));
+        executeCommand(sender, new CommandArguments(commandString, " "));
     }
 
     public void executeCommand(CommandSender sender, CommandArguments args) throws CommandException {

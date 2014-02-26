@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,14 +55,29 @@ public class CommandArguments {
     int index = 0;
     private int depth = 0;
     private boolean currentArgUnescaped = false;
+    private String unclosedQuote;
+    private final boolean allUnescaped;
+    private final String separator;
 
     public CommandArguments(List<String> args) {
         this.args = new ArrayList<String>(args);
         this.flags = new CommandFlags(this);
+        this.unclosedQuote = null;
+        this.allUnescaped = false;
+        this.separator = " ";
     }
 
     public CommandArguments(String... args) {
         this(Arrays.asList(args));
+    }
+
+    public CommandArguments(String args, String separator) {
+        List<String> split = Arrays.asList(args.split(Pattern.quote(separator)));
+        this.unclosedQuote = unquote(split, separator); // modifies the list
+        this.args = split;
+        this.flags = new CommandFlags(this);
+        this.allUnescaped = true;
+        this.separator = separator;
     }
 
     /**
@@ -107,15 +123,53 @@ public class CommandArguments {
     public int remaining() {
         return this.args.size() - this.index;
     }
-    
+
+    public String getUnclosedQuote() {
+        return this.unclosedQuote;
+    }
+
+    public Vector2i offsetToAbsoluteArgument(int cursor) {
+        if (!allUnescaped) {
+            return null;
+        }
+        int word = 0;
+        final int sepLength = separator.length();
+        int length = 0;
+        while (word < args.size()) {
+            int wordLength = args.get(word).length() + sepLength;
+            if (cursor < length + wordLength) {
+                break;
+            }
+            length += wordLength;
+            ++word;
+        }
+        return new Vector2i(word, cursor - length);
+        /*while (word < args.size() && length <= cursor) {
+            ++word;
+            length += args.get(word).length() + sepLength;
+        }*/
+    }
+
     public Vector2i offsetToArgument(int cursor) {
-        //TODO;
+        Vector2i v = offsetToAbsoluteArgument(cursor);
+        if (v != null) {
+            return v.sub(index, 0);
+        }
         return null;
     }
-    
-    public int argumentToOffset(Vector2i index) {
-        //TODO;
-        return 0;
+
+    public int absoluteArgumentToOffset(Vector2i pos) {
+        int length = 0;
+        final int sepLength = separator.length();
+        for (int i = 0; i < pos.getX(); ++i) {
+            length += args.get(i).length() + sepLength;
+        }
+        length += pos.getY();
+        return length;
+    }
+
+    public int argumentToOffset(Vector2i pos) {
+        return argumentToOffset(pos.add(index, 0));
     }
 
     public CommandFlags flags() {
@@ -218,6 +272,10 @@ public class CommandArguments {
      * @see #popString(String) for getting a string-typed argument
      */
     public String currentArgument(String argName) throws ArgumentParseException {
+        return currentArgument(argName, false);
+    }
+
+    public String currentArgument(String argName, boolean ignoreUnclosedQuote) throws ArgumentParseException {
         if (argName != null && this.argOverrides.containsKey(argName)) {
             return this.argOverrides.get(argName);
         }
@@ -226,13 +284,17 @@ public class CommandArguments {
             throw failure(argName, "Argument not present", true);
         }
 
+        if (!ignoreUnclosedQuote && (this.index + 1 == this.args.size()) && (this.unclosedQuote != null)) {
+            throw failure(argName, "Unmatched quoted string! Quote char: " + this.unclosedQuote, false);
+        }
+
         // Quoted argument parsing -- comparts and removes unnecessary arguments
         String current = this.args.get(this.index);
-        
-        if (currentArgUnescaped) {
+
+        if (currentArgUnescaped || allUnescaped) {
             return current;
         }
-        
+
         Matcher start = QUOTE_START_REGEX.matcher(current);
         if (start.find()) { // We've found a quoted string
             boolean foundEnd = false;
@@ -261,7 +323,8 @@ public class CommandArguments {
                 escape.appendTail(quotedBuilder);
             }
 
-            if (!foundEnd) { // Unmatched: "quoted string
+            if (!(foundEnd || ignoreUnclosedQuote)) { // Unmatched: "quoted string
+                this.unclosedQuote = quoteChar;
                 throw failure(argName, "Unmatched quoted string! Quote char: " + quoteChar, false);
             }
             this.args.set(this.index, (current = quotedBuilder.toString()));
@@ -274,11 +337,67 @@ public class CommandArguments {
                     escape.appendReplacement(replace, escape.group(1));
                 }
                 escape.appendTail(replace);
+                current = current.substring(1);
             }
         }
         currentArgUnescaped = true;
 
         return current;
+    }
+
+    protected String unquote(List<String> args, String separator) {
+        ListIterator<String> itr = args.listIterator();
+        while (itr.hasNext()) {
+            String current = itr.next();
+            Matcher start = QUOTE_START_REGEX.matcher(current);
+            if (start.find()) { // We've found a quoted string
+                boolean foundEnd = false;
+                String quoteChar = start.group(1);
+                StringBuffer quotedBuilder = new StringBuffer(2 * current.length());
+                for (boolean first = true; (itr.hasNext() || first) && !foundEnd; first = false) {
+                    if (!first) {
+                        current = itr.next();
+                    }
+
+                    Matcher end = QUOTE_END_REGEX.matcher(current);
+                    if (end.find() && end.group(1).equals(quoteChar)) { // End character found here
+                        foundEnd = true;
+                        current = current.substring(0, current.length() - 1);
+                    }
+
+                    if (!first) {
+                        quotedBuilder.append(separator);
+                    }
+                    Matcher escape = QUOTE_ESCAPE_REGEX.matcher(current); // Replace escaped strings
+                    while (escape.find()) {
+                        escape.appendReplacement(quotedBuilder, escape.group(1));
+                    }
+                    escape.appendTail(quotedBuilder);
+
+                    itr.remove();
+                }
+                itr.add(quotedBuilder.toString());
+
+                if (!foundEnd) {
+                    return quoteChar;
+                }
+
+            } else {
+                Matcher escape = QUOTE_ESCAPE_REGEX.matcher(current);
+                if (escape.find()) {
+                    StringBuffer replace = new StringBuffer(current.length() - 1);
+                    escape.appendReplacement(replace, escape.group(1));
+                    while (escape.find()) {
+                        escape.appendReplacement(replace, escape.group(1));
+                    }
+                    escape.appendTail(replace);
+                    itr.remove();
+                    itr.add(replace.toString());
+                }
+            }
+        }
+
+        return null;
     }
 
     protected boolean setArgOverride(String name, String value) {
@@ -508,11 +627,14 @@ public class CommandArguments {
             failure(argName, "No arguments present", true);
         }
         StringBuilder builder = new StringBuilder();
+        if (hasOverride(argName)) {
+            return success(argName, currentArgument(argName));
+        }
         while (hasMore()) {
-            builder.append(currentArgument(argName));
+            builder.append(currentArgument(argName, true));
             advance();
             if (hasMore()) {
-                builder.append(' ');
+                builder.append(separator);
             }
         }
         String ret = builder.toString();
@@ -556,11 +678,11 @@ public class CommandArguments {
     public boolean has(String key) {
         return this.parsedArgs.containsKey(key);
     }
-    
+
     public boolean hasOverride(String key) {
         return this.argOverrides.containsKey(key);
     }
-    
+
     public String getString(String key) {
         return get(key, String.class);
     }
