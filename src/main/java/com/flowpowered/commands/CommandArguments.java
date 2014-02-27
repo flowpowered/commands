@@ -72,8 +72,11 @@ public class CommandArguments {
     }
 
     public CommandArguments(String args, String separator) {
-        List<String> split = Arrays.asList(args.split(Pattern.quote(separator)));
+        List<String> split = new ArrayList<>(Arrays.asList(args.split(Pattern.quote(separator))));
         this.unclosedQuote = unquote(split, separator); // modifies the list
+        if (args.endsWith(separator)) {
+            split.add("");
+        }
         this.args = split;
         this.flags = new CommandFlags(this);
         this.allUnescaped = true;
@@ -109,6 +112,10 @@ public class CommandArguments {
 
     public int getDepth() {
         return this.depth;
+    }
+
+    public String getSeparator() {
+        return separator;
     }
 
     /**
@@ -169,7 +176,7 @@ public class CommandArguments {
     }
 
     public int argumentToOffset(Vector2i pos) {
-        return argumentToOffset(pos.add(index, 0));
+        return absoluteArgumentToOffset(pos.add(index, 0));
     }
 
     public CommandFlags flags() {
@@ -354,6 +361,7 @@ public class CommandArguments {
                 boolean foundEnd = false;
                 String quoteChar = start.group(1);
                 StringBuffer quotedBuilder = new StringBuffer(2 * current.length());
+                current = current.substring(1);
                 for (boolean first = true; (itr.hasNext() || first) && !foundEnd; first = false) {
                     if (!first) {
                         current = itr.next();

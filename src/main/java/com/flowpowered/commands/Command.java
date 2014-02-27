@@ -39,6 +39,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.slf4j.LoggerFactory;
 
 import com.flowpowered.commands.exception.InsufficientPermissionsException;
 import com.flowpowered.commands.exception.UnknownSubcommandException;
@@ -138,6 +139,16 @@ public class Command implements Named {
         process(sender, args, EXECUTE);
     }
 
+    public int complete(CommandSender sender, CommandArguments args, int cursor, List<CharSequence> candidates) throws CommandException {
+        Complete completer = new Complete(cursor);
+        process(sender, args, completer);
+        int pos = completer.getPosition();
+        if (pos >= 0) {
+            candidates.addAll(completer.getCandidates());
+        }
+        return pos;
+    }
+
     /**
      * {@code ProcessingMode} allows different types of processing in {@code process}.
      */
@@ -185,22 +196,25 @@ public class Command implements Named {
                 argindex = args.offsetToArgument(cursor);
             }
             if (argindex.getX() > 0) {
+                LoggerFactory.getLogger("CommandManager.completion").debug("not next arg");
                 return false; // Something further than next arg should be completed, find the child as usual and call us again.
             }
             String key = CommandArguments.SUBCOMMAND_ARGNAME + args.getDepth();
             if (args.hasOverride(key)) {
+                LoggerFactory.getLogger("CommandManager.completion").debug("override");
                 return false; // We have override for next subcommand name, so that's not what we're completing.
             }
-            String start = args.currentArgument(key).substring(0, argindex.getY()); // TODO: Make sure we're not off by one.
+            String start = args.currentArgument(key, true).substring(0, argindex.getY());
             TreeSet<String> children = new TreeSet<>(command.getChildren().keySet());
             children.addAll(command.getAliases().keySet());
             SortedSet<String> matches = children.tailSet(start);
             candidates = new ArrayList<>();
+            final String unclosedQuote = args.getUnclosedQuote() != null ? args.getUnclosedQuote() : "";
             for (String match : matches) {
                 if (!match.startsWith(start)) {
                     break;
                 }
-                candidates.add(match);
+                candidates.add(match + unclosedQuote + args.getSeparator());
             }
             position = args.argumentToOffset(new Vector2i(argindex.getX(), 0));
             return true;
