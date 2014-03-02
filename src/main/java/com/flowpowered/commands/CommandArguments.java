@@ -26,14 +26,19 @@ package com.flowpowered.commands;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+
 import org.slf4j.Logger;
 
+import com.flowpowered.commands.syntax.Syntax;
+import com.flowpowered.commons.StringUtil;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 
@@ -51,36 +56,53 @@ public class CommandArguments {
     private final Map<String, Object> parsedArgs = new HashMap<String, Object>();
     private final Map<String, String> argOverrides = new HashMap<String, String>();
     private final List<String> args;
+    private final TIntList paddings;
     private final CommandFlags flags;
     int index = 0;
     private int depth = 0;
-    private boolean currentArgUnescaped = false;
     private String unclosedQuote;
     private final boolean allUnescaped;
     private final String separator;
+    private final Syntax syntax;
 
     public CommandArguments(List<String> args) {
         this.args = new ArrayList<String>(args);
         this.flags = new CommandFlags(this);
         this.unclosedQuote = null;
-        this.allUnescaped = false;
+        this.allUnescaped = true;
         this.separator = " ";
+        this.syntax = null; // TODO: sure?
+        this.paddings = null;
     }
 
     public CommandArguments(String... args) {
         this(Arrays.asList(args));
     }
 
-    public CommandArguments(String args, String separator) {
-        List<String> split = new ArrayList<>(Arrays.asList(args.split(Pattern.quote(separator))));
-        this.unclosedQuote = unquote(split, separator); // modifies the list
-        if (args.endsWith(separator)) {
-            split.add("");
+    public CommandArguments(String args, Syntax syntax) {
+        List<String> split = new ArrayList<>();
+        this.paddings = new TIntArrayList();
+        this.unclosedQuote = syntax.split(args, split); // modifies the list
+        int i = 0;
+        paddings.add(0);
+        Iterator<String> itr = split.iterator();
+        while (itr.hasNext()) {
+            if (itr.next().isEmpty()) {
+                if (!itr.hasNext()) {
+                    break;
+                }
+                paddings.set(i, paddings.get(i) + 1);
+                itr.remove();
+            } else {
+                paddings.add(0);
+                ++i;
+            }
         }
         this.args = split;
-        this.flags = new CommandFlags(this);
-        this.allUnescaped = true;
-        this.separator = separator;
+        this.flags = null; // new CommandFlags(this);
+        this.allUnescaped = false;
+        this.syntax = syntax;
+        this.separator = syntax.getSeparator();
     }
 
     /**
@@ -136,14 +158,16 @@ public class CommandArguments {
     }
 
     public Vector2i offsetToAbsoluteArgument(int cursor) {
-        if (!allUnescaped) {
+        if (allUnescaped) {
             return null;
         }
         int word = 0;
         final int sepLength = separator.length();
         int length = 0;
         while (word < args.size()) {
+            int padding = sepLength * paddings.get(word);
             int wordLength = args.get(word).length() + sepLength;
+            length += padding;
             if (cursor < length + wordLength) {
                 break;
             }
@@ -151,10 +175,6 @@ public class CommandArguments {
             ++word;
         }
         return new Vector2i(word, cursor - length);
-        /*while (word < args.size() && length <= cursor) {
-            ++word;
-            length += args.get(word).length() + sepLength;
-        }*/
     }
 
     public Vector2i offsetToArgument(int cursor) {
@@ -168,10 +188,11 @@ public class CommandArguments {
     public int absoluteArgumentToOffset(Vector2i pos) {
         int length = 0;
         final int sepLength = separator.length();
-        for (int i = 0; i < pos.getX(); ++i) {
-            length += args.get(i).length() + sepLength;
+        int i;
+        for (i = 0; i < pos.getX(); ++i) {
+            length += args.get(i).length() + sepLength * (paddings.get(i) + 1);
         }
-        length += pos.getY();
+        length += paddings.get(i) + pos.getY();
         return length;
     }
 
@@ -240,7 +261,6 @@ public class CommandArguments {
             this.commandString.append(this.args.get(this.index));
             if (!fallbackValue) {
                 this.index++; // And increment index
-                currentArgUnescaped = false;
             }
         }
 
@@ -265,6 +285,9 @@ public class CommandArguments {
     }
 
     private static final Pattern QUOTE_START_REGEX = Pattern.compile("^('|\")"), QUOTE_END_REGEX = Pattern.compile("[^\\\\]?('|\")$"), QUOTE_ESCAPE_REGEX = Pattern.compile("\\\\([\"'])");
+    private static final Pattern QUOTE_START1_REGEX = Pattern.compile("(?:^| )(['\"])"), QUOTE_END1_REGEX = Pattern.compile("[^\\\\](['\"])(?: |$)");
+    private static final String QUOTE_END2_REGEX = "[^\\\\](%s)(?: |$)";
+    private static final Pattern SEPARATOR_REGEX = Pattern.compile("( )");
 
     /**
      * Return the current argument, without advancing the argument index.
@@ -283,6 +306,10 @@ public class CommandArguments {
     }
 
     public String currentArgument(String argName, boolean ignoreUnclosedQuote) throws ArgumentParseException {
+        return currentArgument(argName, ignoreUnclosedQuote, true);
+    }
+
+    public String currentArgument(String argName, boolean ignoreUnclosedQuote, boolean unescape) throws ArgumentParseException {
         if (argName != null && this.argOverrides.containsKey(argName)) {
             return this.argOverrides.get(argName);
         }
@@ -298,114 +325,83 @@ public class CommandArguments {
         // Quoted argument parsing -- comparts and removes unnecessary arguments
         String current = this.args.get(this.index);
 
-        if (currentArgUnescaped || allUnescaped) {
+        if (allUnescaped || !unescape) {
             return current;
         }
 
-        Matcher start = QUOTE_START_REGEX.matcher(current);
-        if (start.find()) { // We've found a quoted string
-            boolean foundEnd = false;
-            String quoteChar = start.group(1);
-            StringBuffer quotedBuilder = new StringBuffer(2 * current.length());
-
-            current = current.substring(1);
-            for (boolean first = true; ((this.index + 1) < this.args.size() || first) && !foundEnd; first = false) {
-                if (!first) {
-                    current = this.args.remove(this.index + 1);
-                }
-
-                Matcher end = QUOTE_END_REGEX.matcher(current);
-                if (end.find() && end.group(1).equals(quoteChar)) { // End character found here
-                    foundEnd = true;
-                    current = current.substring(0, current.length() - 1);
-                }
-
-                if (!first) {
-                    quotedBuilder.append(" ");
-                }
-                Matcher escape = QUOTE_ESCAPE_REGEX.matcher(current); // Replace escaped strings
-                while (escape.find()) {
-                    escape.appendReplacement(quotedBuilder, escape.group(1));
-                }
-                escape.appendTail(quotedBuilder);
-            }
-
-            if (!(foundEnd || ignoreUnclosedQuote)) { // Unmatched: "quoted string
-                this.unclosedQuote = quoteChar;
-                throw failure(argName, "Unmatched quoted string! Quote char: " + quoteChar, false);
-            }
-            this.args.set(this.index, (current = quotedBuilder.toString()));
-        } else {
-            Matcher escape = QUOTE_ESCAPE_REGEX.matcher(current);
-            if (escape.find()) {
-                StringBuffer replace = new StringBuffer(current.length() - 1);
-                escape.appendReplacement(replace, escape.group(1));
-                while (escape.find()) {
-                    escape.appendReplacement(replace, escape.group(1));
-                }
-                escape.appendTail(replace);
-                current = current.substring(1);
-            }
+        if (syntax != null) {
+            return syntax.unescape(current);
         }
-        currentArgUnescaped = true;
 
-        return current;
+        return unescape(current);
     }
 
-    protected String unquote(List<String> args, String separator) {
-        ListIterator<String> itr = args.listIterator();
-        while (itr.hasNext()) {
-            String current = itr.next();
-            Matcher start = QUOTE_START_REGEX.matcher(current);
-            if (start.find()) { // We've found a quoted string
-                boolean foundEnd = false;
-                String quoteChar = start.group(1);
-                StringBuffer quotedBuilder = new StringBuffer(2 * current.length());
-                current = current.substring(1);
-                for (boolean first = true; (itr.hasNext() || first) && !foundEnd; first = false) {
-                    if (!first) {
-                        current = itr.next();
-                    }
-
-                    Matcher end = QUOTE_END_REGEX.matcher(current);
-                    if (end.find() && end.group(1).equals(quoteChar)) { // End character found here
-                        foundEnd = true;
-                        current = current.substring(0, current.length() - 1);
-                    }
-
-                    if (!first) {
-                        quotedBuilder.append(separator);
-                    }
-                    Matcher escape = QUOTE_ESCAPE_REGEX.matcher(current); // Replace escaped strings
-                    while (escape.find()) {
-                        escape.appendReplacement(quotedBuilder, escape.group(1));
-                    }
-                    escape.appendTail(quotedBuilder);
-
-                    itr.remove();
-                }
-                itr.add(quotedBuilder.toString());
-
-                if (!foundEnd) {
-                    return quoteChar;
-                }
-
+    protected String split(String line, List<String> dst) {
+        List<String> args = dst;
+        String unclosedQuote = null;
+        args.add("");
+        Matcher startMatcher = QUOTE_START1_REGEX.matcher(line);
+        int index = 0;
+        while (startMatcher.find(index)) {
+            int start = startMatcher.start(1);
+            String quote = startMatcher.group(1);
+            String before = line.substring(index, start);
+            List<String> split = splitIgnoreQuotes(before, SEPARATOR_REGEX, 1);
+            args.add(args.remove(args.size() - 1) + split.get(0));
+            args.addAll(split.subList(1, split.size()));
+            Pattern endPattern = Pattern.compile(QUOTE_END2_REGEX.replaceFirst("%s", StringUtil.escapeRegex(quote)));
+            Matcher endMatcher = endPattern.matcher(line);
+            if (endMatcher.find(start + 1)) {
+                index = endMatcher.end(1);
             } else {
-                Matcher escape = QUOTE_ESCAPE_REGEX.matcher(current);
-                if (escape.find()) {
-                    StringBuffer replace = new StringBuffer(current.length() - 1);
-                    escape.appendReplacement(replace, escape.group(1));
-                    while (escape.find()) {
-                        escape.appendReplacement(replace, escape.group(1));
-                    }
-                    escape.appendTail(replace);
-                    itr.remove();
-                    itr.add(replace.toString());
-                }
+                index = line.length(); // Assume it's quoted all the way till the end
+                unclosedQuote = quote;
+            }
+            String quoted = line.substring(start, index);
+            args.add(args.remove(args.size() - 1) + quoted);
+        }
+        if (index < line.length()) {
+            List<String> split = splitIgnoreQuotes(line.substring(index), SEPARATOR_REGEX, 1);
+            args.add(args.remove(args.size() - 1) + split.get(0));
+            args.addAll(split.subList(1, split.size()));
+        }
+        return unclosedQuote;
+    }
+
+    protected List<String> splitIgnoreQuotes(String input, Pattern separator, int group) {
+        List<String> result = new ArrayList<>();
+        int index = 0;
+        Matcher m = separator.matcher(input);
+        while (m.find(index)) {
+            result.add(input.substring(index, m.start(group)));
+            index = m.end(group);
+        }
+        result.add(input.substring(index, input.length()));
+        return result;
+    }
+
+    protected String unescape(String input) {
+        StringBuffer buf = new StringBuffer(input.length());
+        Matcher startMatcher = QUOTE_START1_REGEX.matcher(input);
+        int index = 0;
+        while (startMatcher.find(index)) {
+            int endOfStart = startMatcher.end(1);
+            String quote = StringUtil.escapeRegex(startMatcher.group(1));
+            Pattern endPattern = Pattern.compile(QUOTE_END2_REGEX.replaceFirst("%s", quote));
+            startMatcher.appendReplacement(buf, startMatcher.group().replaceFirst(quote, ""));
+            Matcher endMatcher = endPattern.matcher(input);
+            if (endMatcher.find(endOfStart)) {
+                buf.append(input, endOfStart, endMatcher.start(1));
+                index = endMatcher.end(1);
+            } else {
+                startMatcher.appendTail(buf);
+                index = input.length();
             }
         }
-
-        return null;
+        if (index < input.length()) {
+            buf.append(input, index, input.length());
+        }
+        return QUOTE_ESCAPE_REGEX.matcher(buf).replaceAll("$1");
     }
 
     protected boolean setArgOverride(String name, String value) {
@@ -422,7 +418,6 @@ public class CommandArguments {
      * @return Whether there is an argument present at the incremented index
      */
     public boolean advance() {
-        currentArgUnescaped = false;
         return ++this.index < this.args.size();
     }
 
@@ -639,6 +634,9 @@ public class CommandArguments {
             return success(argName, currentArgument(argName));
         }
         while (hasMore()) {
+            for (int i = 0; i < paddings.get(index); ++i) {
+                builder.append(separator);
+            }
             builder.append(currentArgument(argName, true));
             advance();
             if (hasMore()) {

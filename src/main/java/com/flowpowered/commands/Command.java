@@ -39,7 +39,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.slf4j.LoggerFactory;
 
 import com.flowpowered.commands.exception.InsufficientPermissionsException;
 import com.flowpowered.commands.exception.UnknownSubcommandException;
@@ -196,15 +195,14 @@ public class Command implements Named {
                 argindex = args.offsetToArgument(cursor);
             }
             if (argindex.getX() > 0) {
-                LoggerFactory.getLogger("CommandManager.completion").debug("not next arg");
                 return false; // Something further than next arg should be completed, find the child as usual and call us again.
             }
             String key = CommandArguments.SUBCOMMAND_ARGNAME + args.getDepth();
             if (args.hasOverride(key)) {
-                LoggerFactory.getLogger("CommandManager.completion").debug("override");
                 return false; // We have override for next subcommand name, so that's not what we're completing.
             }
-            String start = args.currentArgument(key, true).substring(0, argindex.getY());
+            String rawStart = args.currentArgument(key, true, false).substring(0, argindex.getY());
+            String start = args.unescape(rawStart);
             TreeSet<String> children = new TreeSet<>(command.getChildren().keySet());
             children.addAll(command.getAliases().keySet());
             SortedSet<String> matches = children.tailSet(start);
@@ -214,7 +212,7 @@ public class Command implements Named {
                 if (!match.startsWith(start)) {
                     break;
                 }
-                candidates.add(match + unclosedQuote + args.getSeparator());
+                candidates.add(rawStart + match.substring(start.length()) + unclosedQuote + args.getSeparator()); // TODO: Escape
             }
             position = args.argumentToOffset(new Vector2i(argindex.getX(), 0));
             return true;

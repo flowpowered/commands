@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.flowpowered.commands.syntax.BasicSyntax;
+
 public class CommandManager {
     private ConcurrentMap<String, Command> allCommands = new ConcurrentHashMap<>();
     private ConcurrentMap<String, ConcurrentMap<String, Command>> commandsByProvider = new ConcurrentHashMap<>();
@@ -159,7 +161,7 @@ public class CommandManager {
     }
 
     public void executeCommand(CommandSender sender, String commandString) throws CommandException {
-        executeCommand(sender, new CommandArguments(commandString, " "));
+        executeCommand(sender, new CommandArguments(commandString, BasicSyntax.SPOUT_SYNTAX));
     }
 
     public void executeCommand(CommandSender sender, CommandArguments args) throws CommandException {
