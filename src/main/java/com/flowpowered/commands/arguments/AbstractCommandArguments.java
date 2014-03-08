@@ -3,6 +3,17 @@ package com.flowpowered.commands.arguments;
 import com.flowpowered.math.vector.Vector3f;
 
 public abstract class AbstractCommandArguments implements CommandArguments {
+
+    @Override
+    public String currentArgument(String argName) throws ArgumentParseException {
+        return currentArgument(argName, false);
+    }
+
+    @Override
+    public String currentArgument(String argName, boolean ignoreUnclosedQuote) throws ArgumentParseException {
+        return currentArgument(argName, ignoreUnclosedQuote, true);
+    }
+
     @Override
     public <T> T pop(String argName, Class<T> type, T def) throws ArgumentParseException {
         try {

@@ -105,30 +105,15 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
         this.separator = syntax.getSeparator();
     }
 
-    /**
-     * Returns all the remaining arguments.
-     *
-     * @return all arguments
-     */
     @Override
     public List<String> get() {
         return this.args.subList(this.index, this.args.size());
     }
 
-    /**
-     * Gives the mutable list of argument strings currently in use by this.
-     *
-     * @return the arguments
-     */
     List<String> getLive() {
         return this.args;
     }
 
-    /**
-     * Returns the length of the arguments.
-     *
-     * @return length of arguments
-     */
     @Override
     public int length() {
         return this.args.size();
@@ -144,11 +129,6 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
         return separator;
     }
 
-    /**
-     * Returns whether any more unparsed arguments are present
-     *
-     * @return whether the current index is less than the total number of arguments
-     */
     @Override
     public boolean hasMore() {
         return this.index < this.args.size();
@@ -223,37 +203,10 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
 
     // State control
 
-    /**
-     * Called when an error has occurred while parsing the specified argument
-     * Example:
-     * <pre>
-     *   if (success) {
-     *       return success(argName, myValue);
-     *     } else {
-     *       throw failure(argName, "I dun goofed", "some", "other", "options");
-     *     }
-     * </pre>
-     *
-     * @param argName The name of the argument
-     * @param error The error that occurred
-     * @param silenceable Whether the error is caused by syntax of single argument/permanently invalid provided value (or not)
-     * @see ArgumentParseException for more detail about meanings of args
-     * @return The exception -- must be thrown
-     */
     @Override
     public ArgumentParseException failure(String argName, String error, boolean silenceable) {
         return new ArgumentParseException(this.commandString.toString().trim(), argName, error, silenceable);
     }
-
-    /**
-     * Must be called when an argument has been successfully parsed
-     * This stores the parsed value into the map, appends the string value to the map, and advances the index.
-     *
-     * @param argName     The name of the arg
-     * @param parsedValue The parsed value of the argument
-     * @param <T>         The type of the parsed value
-     * @return {@code parsedValue}
-     */
 
     @Override
     public <T> T success(String argName, T parsedValue) {
@@ -283,15 +236,6 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
         return parsedValue;
     }
 
-    /**
-     * This method should be called in methods that can potentially return a default value.
-     *
-     * @param e The thrown exception
-     * @param def The default value that could be returned
-     * @param <T> The type of the argument
-     * @return The default value, if error is safe to silence
-     * @throws ArgumentParseException if the error is not appropriate to be silenced
-     */
     @Override
     public <T> T potentialDefault(ArgumentParseException e, T def) throws ArgumentParseException {
         if (e.isSilenceable()) {
@@ -304,28 +248,6 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
     private static final Pattern QUOTE_ESCAPE_REGEX = Pattern.compile("\\\\([\"'])");
     private static final Pattern QUOTE_START_REGEX = Pattern.compile("(?:^| )(['\"])");
     private static final String QUOTE_END_REGEX = "[^\\\\](%s)(?: |$)";
-
-    /**
-     * Return the current argument, without advancing the argument index.
-     * Combines quoted strings provided as arguments as necessary.
-     * If there are no arguments remaining, the default value is returned.
-     *
-     * @param argName The name of the argument
-     * @return The argument with the current index.
-     * @throws ArgumentParseException if an invalid quoted string was attempted to be used
-     * @see #success(String, Object)
-     * @see #failure(String, String, boolean, String...)
-     * @see #popString(String) for getting a string-typed argument
-     */
-    @Override
-    public String currentArgument(String argName) throws ArgumentParseException {
-        return currentArgument(argName, false);
-    }
-
-    @Override
-    public String currentArgument(String argName, boolean ignoreUnclosedQuote) throws ArgumentParseException {
-        return currentArgument(argName, ignoreUnclosedQuote, true);
-    }
 
     @Override
     public String currentArgument(String argName, boolean ignoreUnclosedQuote, boolean unescape) throws ArgumentParseException {
@@ -397,20 +319,11 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
         return false;
     }
 
-    /**
-     * Increase the argument 'pointer' by one without storing any arguments
-     *
-     * @return Whether there is an argument present at the incremented index
-     */
     @Override
     public boolean advance() {
         return ++this.index < this.args.size();
     }
 
-    /**
-     *
-     * @throws ArgumentParseException when unparsed arguments are present.
-     */
     @Override
     public void assertCompletelyParsed() throws ArgumentParseException {
         if (this.index < this.args.size()) {
@@ -430,33 +343,7 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
     public String popSubCommand() throws ArgumentParseException {
         return popString(SUBCOMMAND_ARGNAME + this.depth++);
     }
-    private static final int MAX_ARG_FULLPRINT = 5;
 
-    private static String buildEnumError(Class<? extends Enum<?>> enumClass) {
-        Enum<?>[] constants = enumClass.getEnumConstants();
-        String itemList;
-        if (constants.length > MAX_ARG_FULLPRINT) {
-            itemList = "an element of " + enumClass.getSimpleName();
-        } else {
-            boolean first = true;
-            StringBuilder build = new StringBuilder();
-            for (Enum<?> e : constants) {
-                if (!first) {
-                    build.append(", ");
-                }
-                build.append("'").append(e.name()).append("'");
-                first = false;
-            }
-            itemList = build.toString();
-        }
-        return "Invalid " + enumClass.getSimpleName() + "; Must be 0-" + constants.length + " or " + itemList + ".";
-    }
-
-    /**
-     * Returns a string including every remaining argument
-     *
-     * @return string from specified arg on
-     */
     @Override
     public String popRemainingStrings(String argName) throws ArgumentParseException {
         if (!hasMore()) {
@@ -519,11 +406,6 @@ public class DefaultCommandArguments extends AbstractCommandArguments {
         return this.argOverrides.containsKey(key);
     }
 
-    /**
-     * Returns the arguments in an array.
-     *
-     * @return arguments
-     */
     @Override
     public String[] toArray() {
         return this.args.toArray(new String[this.args.size()]);
