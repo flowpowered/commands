@@ -332,10 +332,18 @@ public class CommandArguments {
             return syntax.unescape(current);
         }
 
-        return unescape(current);
+        return defaultUnescape(current);
     }
 
-    protected String unescape(String input) {
+    public String unescape(String input) {
+        if (syntax != null) {
+            return syntax.unescape(input);
+        }
+
+        return defaultUnescape(input);
+    }
+
+    protected String defaultUnescape(String input) {
         StringBuffer buf = new StringBuffer(input.length());
         Matcher startMatcher = QUOTE_START_REGEX.matcher(input);
         int index = 0;
