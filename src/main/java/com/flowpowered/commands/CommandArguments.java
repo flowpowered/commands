@@ -284,10 +284,9 @@ public class CommandArguments {
         }
     }
 
-    private static final Pattern QUOTE_START_REGEX = Pattern.compile("^('|\")"), QUOTE_END_REGEX = Pattern.compile("[^\\\\]?('|\")$"), QUOTE_ESCAPE_REGEX = Pattern.compile("\\\\([\"'])");
-    private static final Pattern QUOTE_START1_REGEX = Pattern.compile("(?:^| )(['\"])"), QUOTE_END1_REGEX = Pattern.compile("[^\\\\](['\"])(?: |$)");
-    private static final String QUOTE_END2_REGEX = "[^\\\\](%s)(?: |$)";
-    private static final Pattern SEPARATOR_REGEX = Pattern.compile("( )");
+    private static final Pattern QUOTE_ESCAPE_REGEX = Pattern.compile("\\\\([\"'])");
+    private static final Pattern QUOTE_START_REGEX = Pattern.compile("(?:^| )(['\"])");
+    private static final String QUOTE_END_REGEX = "[^\\\\](%s)(?: |$)";
 
     /**
      * Return the current argument, without advancing the argument index.
@@ -336,58 +335,14 @@ public class CommandArguments {
         return unescape(current);
     }
 
-    protected String split(String line, List<String> dst) {
-        List<String> args = dst;
-        String unclosedQuote = null;
-        args.add("");
-        Matcher startMatcher = QUOTE_START1_REGEX.matcher(line);
-        int index = 0;
-        while (startMatcher.find(index)) {
-            int start = startMatcher.start(1);
-            String quote = startMatcher.group(1);
-            String before = line.substring(index, start);
-            List<String> split = splitIgnoreQuotes(before, SEPARATOR_REGEX, 1);
-            args.add(args.remove(args.size() - 1) + split.get(0));
-            args.addAll(split.subList(1, split.size()));
-            Pattern endPattern = Pattern.compile(QUOTE_END2_REGEX.replaceFirst("%s", StringUtil.escapeRegex(quote)));
-            Matcher endMatcher = endPattern.matcher(line);
-            if (endMatcher.find(start + 1)) {
-                index = endMatcher.end(1);
-            } else {
-                index = line.length(); // Assume it's quoted all the way till the end
-                unclosedQuote = quote;
-            }
-            String quoted = line.substring(start, index);
-            args.add(args.remove(args.size() - 1) + quoted);
-        }
-        if (index < line.length()) {
-            List<String> split = splitIgnoreQuotes(line.substring(index), SEPARATOR_REGEX, 1);
-            args.add(args.remove(args.size() - 1) + split.get(0));
-            args.addAll(split.subList(1, split.size()));
-        }
-        return unclosedQuote;
-    }
-
-    protected List<String> splitIgnoreQuotes(String input, Pattern separator, int group) {
-        List<String> result = new ArrayList<>();
-        int index = 0;
-        Matcher m = separator.matcher(input);
-        while (m.find(index)) {
-            result.add(input.substring(index, m.start(group)));
-            index = m.end(group);
-        }
-        result.add(input.substring(index, input.length()));
-        return result;
-    }
-
     protected String unescape(String input) {
         StringBuffer buf = new StringBuffer(input.length());
-        Matcher startMatcher = QUOTE_START1_REGEX.matcher(input);
+        Matcher startMatcher = QUOTE_START_REGEX.matcher(input);
         int index = 0;
         while (startMatcher.find(index)) {
             int endOfStart = startMatcher.end(1);
             String quote = StringUtil.escapeRegex(startMatcher.group(1));
-            Pattern endPattern = Pattern.compile(QUOTE_END2_REGEX.replaceFirst("%s", quote));
+            Pattern endPattern = Pattern.compile(QUOTE_END_REGEX.replaceFirst("%s", quote));
             startMatcher.appendReplacement(buf, startMatcher.group().replaceFirst(quote, ""));
             Matcher endMatcher = endPattern.matcher(input);
             if (endMatcher.find(endOfStart)) {
