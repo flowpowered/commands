@@ -37,6 +37,7 @@ import gnu.trove.list.array.TIntArrayList;
 
 import org.slf4j.Logger;
 
+import com.flowpowered.commands.converters.ArgumentConverterSet;
 import com.flowpowered.commands.syntax.Syntax;
 import com.flowpowered.commons.StringUtil;
 import com.flowpowered.math.vector.Vector2i;
@@ -64,6 +65,7 @@ public class CommandArguments {
     private final boolean allUnescaped;
     private final String separator;
     private final Syntax syntax;
+    private final ArgumentConverterSet converters = new ArgumentConverterSet(); // TODO: Don't hardcode it here.
 
     public CommandArguments(List<String> args) {
         this.args = new ArrayList<String>(args);
@@ -367,7 +369,7 @@ public class CommandArguments {
         return QUOTE_ESCAPE_REGEX.matcher(buf).replaceAll("$1");
     }
 
-    protected boolean setArgOverride(String name, String value) {
+    public boolean setArgOverride(String name, String value) {
         if (!this.argOverrides.containsKey(name)) {
             this.argOverrides.put(name, value);
             return true;
@@ -395,6 +397,19 @@ public class CommandArguments {
     }
 
     // Argument storage methods
+
+    public <T> T pop(String argName, Class<T> type) throws ArgumentParseException {
+        T arg = converters.convert(this, argName, type);
+        return success(argName, arg);
+    }
+
+    public <T> T pop(String argName, Class<T> type, T def) throws ArgumentParseException {
+        try {
+            return pop(argName, type);
+        } catch (ArgumentParseException e) {
+            return potentialDefault(e, def);
+        }
+    }
 
     public String popString(String argName) throws ArgumentParseException {
         String arg = currentArgument(argName);
