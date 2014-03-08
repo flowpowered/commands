@@ -35,7 +35,7 @@ import com.flowpowered.commands.Command;
 import com.flowpowered.commands.CommandManager;
 import com.flowpowered.commands.CommandProvider;
 import com.flowpowered.commands.CommandSender;
-import com.flowpowered.commands.arguments.CommandArguments;
+import com.flowpowered.commands.arguments.DefaultCommandArguments;
 import com.flowpowered.commands.filter.CommandFilter;
 
 public final class AnnotatedCommandExecutorFactory {
@@ -69,7 +69,7 @@ public final class AnnotatedCommandExecutorFactory {
                 return false;
             }
             if ((CommandSender.class.isAssignableFrom(params[0]) || CommandSender.class.isAssignableFrom(params[1]))
-                    && (CommandArguments.class.equals(params[0]) || CommandArguments.class.equals(params[1]))) {
+                    && (DefaultCommandArguments.class.equals(params[0]) || DefaultCommandArguments.class.equals(params[1]))) {
                 return true;
             } else {
                 logger.warn("Unable to register " + method.getName() + " as a command, method parameters must be CommandSender and CommandArguments");

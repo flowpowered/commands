@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Handle parsing and storing values of flags for a {@link CommandArguments}
+ * Handle parsing and storing values of flags for a {@link DefaultCommandArguments}
  * Flags are stored in the same map as other command arguments in the attached CommandArguments instance.
  */
 public class CommandFlags {
@@ -78,10 +78,10 @@ public class CommandFlags {
         }
     }
 
-    private final CommandArguments args;
+    private final DefaultCommandArguments args;
     private final Map<String, Flag> flags = new HashMap<String, Flag>();
 
-    public CommandFlags(CommandArguments args) {
+    public CommandFlags(DefaultCommandArguments args) {
         this.args = args;
     }
 
@@ -98,7 +98,7 @@ public class CommandFlags {
     }
 
     /**
-     * Parse flags from the attached {@link CommandArguments} instance
+     * Parse flags from the attached {@link DefaultCommandArguments} instance
      *
      * @return Whether any flags were parsed
      * @throws ArgumentParseException if an invalid flag is provided

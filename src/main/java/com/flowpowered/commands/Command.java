@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.flowpowered.commands.arguments.DefaultCommandArguments;
 import com.flowpowered.commands.arguments.CommandArguments;
 import com.flowpowered.commands.exception.InsufficientPermissionsException;
 import com.flowpowered.commands.exception.UnknownSubcommandException;
@@ -124,7 +125,7 @@ public class Command implements Named {
      */
     public Command getDescendant(List<String> path) throws CommandException {
         Get getter = new Command.Get();
-        process(null, new CommandArguments(path), getter);
+        process(null, new DefaultCommandArguments(path), getter);
         return getter.getCommand();
     }
 
