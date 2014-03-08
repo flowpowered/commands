@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.flowpowered.commands.Command.ProcessingMode;
+import com.flowpowered.commands.arguments.CommandArguments;
 
 public class Alias {
     private final List<String> path;

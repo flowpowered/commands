@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.flowpowered.commands;
+package com.flowpowered.commands.arguments;
 
 import java.text.NumberFormat;
 import java.text.ParseException;

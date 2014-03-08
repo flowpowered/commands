@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.flowpowered.commands;
+package com.flowpowered.commands.arguments;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +37,7 @@ import gnu.trove.list.array.TIntArrayList;
 
 import org.slf4j.Logger;
 
+import com.flowpowered.commands.CommandSender;
 import com.flowpowered.commands.converters.ArgumentConverterSet;
 import com.flowpowered.commands.syntax.Syntax;
 import com.flowpowered.commons.StringUtil;

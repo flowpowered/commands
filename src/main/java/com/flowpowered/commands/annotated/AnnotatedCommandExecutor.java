@@ -28,10 +28,10 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import com.flowpowered.commands.Command;
-import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandException;
 import com.flowpowered.commands.CommandExecutor;
 import com.flowpowered.commands.CommandSender;
+import com.flowpowered.commands.arguments.CommandArguments;
 
 /**
  * Allows for method-registration of commands.

@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.flowpowered.commands.arguments.CommandArguments;
 import com.flowpowered.commands.exception.InsufficientPermissionsException;
 import com.flowpowered.commands.exception.UnknownSubcommandException;
 import com.flowpowered.commands.filter.CommandFilter;

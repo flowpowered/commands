@@ -1,7 +1,7 @@
 package com.flowpowered.commands.converters;
 
-import com.flowpowered.commands.ArgumentParseException;
-import com.flowpowered.commands.CommandArguments;
+import com.flowpowered.commands.arguments.ArgumentParseException;
+import com.flowpowered.commands.arguments.CommandArguments;
 import com.flowpowered.math.vector.Vector3f;
 
 public class Vector3Converter implements ArgumentConverter {

@@ -23,6 +23,8 @@
  */
 package com.flowpowered.commands;
 
+import com.flowpowered.commands.arguments.CommandArguments;
+
 public interface CommandExecutor {
     /**
      * @param command the command being executed

@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.flowpowered.commands.ArgumentParseException;
-import com.flowpowered.commands.CommandArguments;
+import com.flowpowered.commands.arguments.ArgumentParseException;
+import com.flowpowered.commands.arguments.CommandArguments;
 
 public class ArgumentConverterSet {
     private Map<Class<?>, ArgumentConverter> cache = new ConcurrentHashMap<>();

@@ -32,10 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.flowpowered.commands.Command;
-import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandManager;
 import com.flowpowered.commands.CommandProvider;
 import com.flowpowered.commands.CommandSender;
+import com.flowpowered.commands.arguments.CommandArguments;
 import com.flowpowered.commands.filter.CommandFilter;
 
 public final class AnnotatedCommandExecutorFactory {

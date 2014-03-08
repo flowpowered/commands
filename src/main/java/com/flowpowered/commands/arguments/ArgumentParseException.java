@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.flowpowered.commands;
+package com.flowpowered.commands.arguments;
 
 import com.flowpowered.commands.exception.UserFriendlyCommandException;
 
