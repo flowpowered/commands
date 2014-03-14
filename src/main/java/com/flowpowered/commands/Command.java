@@ -170,7 +170,7 @@ public class Command implements Named {
 
     protected static class Complete implements ProcessingMode {
         private final int cursor;
-        private List<CharSequence> candidates = null;
+        private List<String> candidates = null;
         private int position = -1;
 
         public Complete(int cursor) {
@@ -185,9 +185,9 @@ public class Command implements Named {
                 if (!(executor instanceof CompletingCommandExecutor)) {
                     return true; // We can't complete anything, cause the command doesn't support it. We're done.
                 }
-                List<CharSequence> cands = new ArrayList<>();
+                List<String> cands = new ArrayList<>();
                 int pos = ((CompletingCommandExecutor) executor).complete(command, sender, args, argindex.getX(), argindex.getY(), cands);
-                if (pos >= 0) {
+                if (pos >= -1) {
                     position = pos;
                     candidates = cands;
                     return true; // The executor completed one of it's arguments. Completion is found, we're done.
@@ -201,24 +201,14 @@ public class Command implements Named {
             if (args.hasOverride(key)) {
                 return false; // We have override for next subcommand name, so that's not what we're completing.
             }
-            String rawStart = args.currentArgument(key, true, false).substring(0, argindex.getY());
-            String start = args.unescape(rawStart);
             TreeSet<String> children = new TreeSet<>(command.getChildren().keySet());
             children.addAll(command.getAliases().keySet());
-            SortedSet<String> matches = children.tailSet(start);
             candidates = new ArrayList<>();
-            final String unclosedQuote = args.getUnclosedQuote() != null ? args.getUnclosedQuote() : "";
-            for (String match : matches) {
-                if (!match.startsWith(start)) {
-                    break;
-                }
-                candidates.add(rawStart + match.substring(start.length()) + unclosedQuote + args.getSeparator()); // TODO: Escape
-            }
-            position = args.argumentToOffset(new Vector2i(argindex.getX(), 0));
+            position = args.complete(key, cursor, children, candidates);
             return true;
         }
 
-        public List<CharSequence> getCandidates() {
+        public List<String> getCandidates() {
             return candidates;
         }
 

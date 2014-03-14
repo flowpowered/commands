@@ -29,12 +29,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import com.flowpowered.commands.syntax.Syntax;
@@ -60,7 +62,7 @@ public class CommandArguments {
     private final CommandFlags flags;
     int index = 0;
     private int depth = 0;
-    private String unclosedQuote;
+    private Pair<String, Integer> unclosedQuote;
     private final boolean allUnescaped;
     private final String separator;
     private final Syntax syntax;
@@ -86,6 +88,7 @@ public class CommandArguments {
         int i = 0;
         paddings.add(0);
         Iterator<String> itr = split.iterator();
+        // TODO: This loop is kinda syntax-specific, isn't it?
         while (itr.hasNext()) {
             if (itr.next().isEmpty()) {
                 if (!itr.hasNext()) {
@@ -153,7 +156,7 @@ public class CommandArguments {
         return this.args.size() - this.index;
     }
 
-    public String getUnclosedQuote() {
+    public Pair<String, Integer> getUnclosedQuote() {
         return this.unclosedQuote;
     }
 
@@ -198,6 +201,34 @@ public class CommandArguments {
 
     public int argumentToOffset(Vector2i pos) {
         return absoluteArgumentToOffset(pos.add(index, 0));
+    }
+
+    public int complete(String argName, int cursor, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+        return complete(argName, offsetToArgument(cursor), potentialCandidates, candidates);
+    }
+
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+        String rawStart = currentArgument(argName, true, false).substring(0, position.getY());
+        String start = unescape(rawStart);
+        SortedSet<String> matches = potentialCandidates.tailSet(start);
+        String unclosedQuote = "";
+        Pair<String, Integer> quote = getUnclosedQuote();
+        if (quote != null) {
+            int quoteArgNumber = offsetToArgument(quote.getRight()).getX();
+            if (quoteArgNumber <= 0) {
+                unclosedQuote = quote.getLeft();
+            }
+        }
+        for (String match : matches) {
+            if (!match.startsWith(start)) {
+                break;
+            }
+            candidates.add(rawStart + escape(match.substring(start.length())) + unclosedQuote + getSeparator());
+        }
+        if (candidates.isEmpty()) {
+            return -1;
+        }
+        return argumentToOffset(new Vector2i(position.getX(), 0));
     }
 
     public CommandFlags flags() {
@@ -287,6 +318,7 @@ public class CommandArguments {
     private static final Pattern QUOTE_ESCAPE_REGEX = Pattern.compile("\\\\([\"'])");
     private static final Pattern QUOTE_START_REGEX = Pattern.compile("(?:^| )(['\"])");
     private static final String QUOTE_END_REGEX = "[^\\\\](%s)(?: |$)";
+    private static final Pattern QUOTE_TOESCAPE_REGEX = Pattern.compile("\"'");
 
     /**
      * Return the current argument, without advancing the argument index.
@@ -343,6 +375,13 @@ public class CommandArguments {
         return defaultUnescape(input);
     }
 
+    public String escape(String input) {
+        if (syntax != null) {
+            return syntax.escape(input);
+        }
+        return defaultEscape(input);
+    }
+
     protected String defaultUnescape(String input) {
         StringBuffer buf = new StringBuffer(input.length());
         Matcher startMatcher = QUOTE_START_REGEX.matcher(input);
@@ -365,6 +404,10 @@ public class CommandArguments {
             buf.append(input, index, input.length());
         }
         return QUOTE_ESCAPE_REGEX.matcher(buf).replaceAll("$1");
+    }
+
+    protected String defaultEscape(String input) {
+        return QUOTE_TOESCAPE_REGEX.matcher(input).replaceAll("\\\\$0");
     }
 
     protected boolean setArgOverride(String name, String value) {

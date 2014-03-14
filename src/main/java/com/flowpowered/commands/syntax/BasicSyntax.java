@@ -7,6 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.flowpowered.commons.StringUtil;
 
 public class BasicSyntax implements Syntax {
@@ -25,9 +28,9 @@ public class BasicSyntax implements Syntax {
     }
 
     @Override
-    public String split(String input, List<String> output) {
+    public Pair<String, Integer> split(String input, List<String> output) {
         List<String> args = output;
-        String unclosedQuote = null;
+        Pair<String, Integer> unclosedQuote = null;
         args.add("");
         Matcher startMatcher = quoteStart.matcher(input);
         int index = 0;
@@ -44,7 +47,7 @@ public class BasicSyntax implements Syntax {
                 index = endMatcher.end(1);
             } else {
                 index = input.length(); // Assume it's quoted all the way till the end
-                unclosedQuote = quote;
+                unclosedQuote = new ImmutablePair<>(quote, start);
             }
             String quoted = input.substring(start, index);
             args.add(args.remove(args.size() - 1) + quoted);
@@ -120,5 +123,5 @@ public class BasicSyntax implements Syntax {
             "\\\\([\"'])", // Unescape
             "['\"]", // Escape match
             "\\\\$0" // Escape replace
-    );
+            );
 }

@@ -2,9 +2,11 @@ package com.flowpowered.commands.syntax;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 public interface Syntax {
 
-    String split(String input, List<String> output);
+    Pair<String, Integer> split(String input, List<String> output);
 
     String unescape(String input);
 
