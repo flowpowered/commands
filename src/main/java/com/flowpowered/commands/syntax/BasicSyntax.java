@@ -141,6 +141,9 @@ public class BasicSyntax implements Syntax {
         return result;
     }
 
+    /**
+     * The command syntax of the old Spout Engine
+     */
     public static BasicSyntax SPOUT_SYNTAX = new BasicSyntax("(?:^| )(['\"])", // Quote start
             "[^\\\\](%s)(?: |$)", // Quote end
             " ", // Separator
