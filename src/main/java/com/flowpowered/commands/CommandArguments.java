@@ -26,7 +26,6 @@ package com.flowpowered.commands;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -84,24 +83,9 @@ public class CommandArguments {
     public CommandArguments(String args, Syntax syntax) {
         List<String> split = new ArrayList<>();
         this.paddings = new TIntArrayList();
-        this.unclosedQuote = syntax.split(args, split); // modifies the list
-        int i = 0;
-        paddings.add(0);
-        Iterator<String> itr = split.iterator();
-        // TODO: This loop is kinda syntax-specific, isn't it?
-        while (itr.hasNext()) {
-            if (itr.next().isEmpty()) {
-                if (!itr.hasNext()) {
-                    break;
-                }
-                paddings.set(i, paddings.get(i) + 1);
-                itr.remove();
-            } else {
-                paddings.add(0);
-                ++i;
-            }
-        }
+        this.unclosedQuote = syntax.splitNoEmpties(args, split, paddings);  // modifies the lists
         this.args = split;
+
         this.flags = null; // new CommandFlags(this);
         this.allUnescaped = false;
         this.syntax = syntax;
@@ -208,7 +192,7 @@ public class CommandArguments {
     }
 
     public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
-        String rawStart = currentArgument(argName, true, false).substring(0, position.getY());
+        String rawStart = currentArgument(argName, true, false).substring(0, Math.max(0, position.getY()));
         String start = unescape(rawStart);
         SortedSet<String> matches = potentialCandidates.tailSet(start);
         String unclosedQuote = "";
