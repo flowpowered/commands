@@ -15,12 +15,12 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.flowpowered.commons.StringUtil;
 
-public class BasicSyntax implements Syntax {
+public class RegexSyntax implements Syntax {
     private final Pattern quoteStart, unescape, sepPattern, escapeMatch;
     private final String quoteEnd, separator, escapeReplace;
     private final Map<String, Pattern> quoteEnds = new ConcurrentHashMap<>();
 
-    public BasicSyntax(String quoteStart, String quoteEnd, String separator, String separatorPattern, String unescape, String escapeMatch, String escapeReplace) {
+    public RegexSyntax(String quoteStart, String quoteEnd, String separator, String separatorPattern, String unescape, String escapeMatch, String escapeReplace) {
         this.quoteStart = Pattern.compile(quoteStart);
         this.quoteEnd = quoteEnd;
         this.unescape = Pattern.compile(unescape);
@@ -144,7 +144,7 @@ public class BasicSyntax implements Syntax {
     /**
      * The command syntax of the old Spout Engine
      */
-    public static BasicSyntax SPOUT_SYNTAX = new BasicSyntax("(?:^| )(['\"])", // Quote start
+    public static RegexSyntax SPOUT_SYNTAX = new RegexSyntax("(?:^| )(['\"])", // Quote start
             "[^\\\\](%s)(?: |$)", // Quote end
             " ", // Separator
             "( )", // Separator regex
