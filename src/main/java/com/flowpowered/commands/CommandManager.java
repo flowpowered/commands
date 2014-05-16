@@ -160,6 +160,7 @@ public class CommandManager {
         parent.addAlias(name, alias);
     }
 
+    @Deprecated
     public void executeCommand(CommandSender sender, String commandString) throws CommandException {
         executeCommand(sender, new CommandArguments(commandString, RegexSyntax.SPOUT_SYNTAX));
     }

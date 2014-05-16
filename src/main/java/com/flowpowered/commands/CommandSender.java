@@ -27,6 +27,8 @@ import com.flowpowered.chat.ChatReceiver;
 
 public interface CommandSender extends ChatReceiver {
 
+    @Deprecated
     void processCommand(String commandLine) throws CommandException;
 
+    void processCommand(CommandArguments commandLine) throws CommandException;
 }
