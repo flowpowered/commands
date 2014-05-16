@@ -47,7 +47,7 @@ public class DefaultSyntax extends AbstractSyntax {
         int quoteStart = -1;
         for (int i = 0; i < input.length(); ++i) {
             char c = input.charAt(i);
-            if (split && c == ' ' && quoteChar != 0) {
+            if (split && c == ' ' && quoteChar == 0) {
                 output.add(current.toString());
                 current = new StringBuilder();
                 continue;
@@ -79,5 +79,7 @@ public class DefaultSyntax extends AbstractSyntax {
         }
         return null;
     }
+
+    public static final DefaultSyntax INSTANCE = new DefaultSyntax();
 
 }
