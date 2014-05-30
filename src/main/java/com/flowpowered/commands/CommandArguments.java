@@ -191,7 +191,11 @@ public class CommandArguments {
         return complete(argName, offsetToArgument(cursor), potentialCandidates, candidates);
     }
 
-    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+    public int complete(String argName, int argNumber, int offset, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+        return complete(argName, new Vector2i(argNumber, offset), potentialCandidates, candidates);
+    }
+
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException { // TODO: Don't throw this
         String rawStart = currentArgument(argName, true, false).substring(0, Math.max(0, position.getY()));
         String start = unescape(rawStart);
         SortedSet<String> matches = potentialCandidates.tailSet(start);
@@ -210,7 +214,11 @@ public class CommandArguments {
             candidates.add(rawStart + escape(match.substring(start.length())) + unclosedQuote + getSeparator());
         }
         if (candidates.isEmpty()) {
-            return -1;
+            if (unclosedQuote == "") {
+                return -1;
+            }
+            candidates.add(unclosedQuote);
+            return argumentToOffset(position);
         }
         return argumentToOffset(new Vector2i(position.getX(), 0));
     }
