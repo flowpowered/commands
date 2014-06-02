@@ -18,7 +18,11 @@ public class RegexSyntax extends AbstractSyntax {
     private final Map<String, Pattern> quoteEnds = new ConcurrentHashMap<>();
 
     public RegexSyntax(String quoteStart, String quoteEnd, String separator, String separatorPattern, String unescape, String escapeMatch, String escapeReplace) {
-        super(separator);
+        this(null, quoteStart, quoteEnd, separator, separatorPattern, unescape, escapeMatch, escapeReplace);
+    }
+
+    public RegexSyntax(FlagSyntax defaultFlagSyntax, String quoteStart, String quoteEnd, String separator, String separatorPattern, String unescape, String escapeMatch, String escapeReplace) {
+        super(separator, defaultFlagSyntax);
         this.quoteStart = Pattern.compile(quoteStart);
         this.quoteEnd = quoteEnd;
         this.unescape = Pattern.compile(unescape);
@@ -114,7 +118,8 @@ public class RegexSyntax extends AbstractSyntax {
     /**
      * The command syntax of the old Spout Engine
      */
-    public static RegexSyntax SPOUT_SYNTAX = new RegexSyntax("(?:^| )(['\"])", // Quote start
+    public static RegexSyntax SPOUT_SYNTAX = new RegexSyntax(SpoutFlagSyntax.INSTANCE,
+            "(?:^| )(['\"])", // Quote start
             "[^\\\\](%s)(?: |$)", // Quote end
             " ", // Separator
             "( )", // Separator regex

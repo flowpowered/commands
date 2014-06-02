@@ -17,4 +17,6 @@ public interface Syntax {
     String escape(String input);
 
     String getSeparator();
+
+    FlagSyntax getDefaultFlagSyntax();
 }

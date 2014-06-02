@@ -23,183 +23,180 @@
  */
 package com.flowpowered.commands;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import gnu.trove.map.TCharObjectMap;
+import gnu.trove.map.hash.TCharObjectHashMap;
+
+import com.flowpowered.commands.syntax.DefaultFlagSyntax;
+import com.flowpowered.commands.syntax.FlagSyntax;
+import com.flowpowered.commands.syntax.Syntax;
 
 /**
  * Handle parsing and storing values of flags for a {@link CommandArguments}
  * Flags are stored in the same map as other command arguments in the attached CommandArguments instance.
  */
 public class CommandFlags {
-    public static final Pattern FLAG_REGEX = Pattern.compile("^-(?<key>-?[\\w]+)(?:=(?<value>.*))?$");
+    public static final String FLAG_ARGNAME = "flags.";
 
     public static class Flag {
-        private final String[] names;
-        private final boolean value;
+        private final String[] longNames;
+        private final char[] shortNames;
+        private final int minArgs;
+        private final int maxArgs;
+        private CommandArguments args;
+        private boolean present;
 
-        public Flag(boolean value, String... names) {
-            this.value = value;
-            this.names = names;
+        // TODO: Sets maybe?
+        public Flag(String[] longNames, char[] shortNames, int minArgs, int maxArgs) {
+            this.minArgs = minArgs;
+            this.maxArgs = maxArgs;
+            this.longNames = longNames;
+            this.shortNames = shortNames;
         }
 
-        public String[] getNames() {
-            return names;
+        public String[] getLongNames() {
+            return longNames;
         }
 
-        public boolean isValue() {
-            return value;
+        public char[] getShortNames() {
+            return shortNames;
         }
 
-        /**
-         * Create a new value flag with the specified aliases
-         *
-         * @param names The aliases for the flag
-         * @return The flag object
-         */
-        public static Flag v(String... names) {
-            return new Flag(true, names);
+        public boolean isPresent() {
+            return present;
         }
 
-        /**
-         * Create a new boolean flag with the specified aliases
-         *
-         * @param names The aliases for the flag
-         * @return The flag object
-         */
-        public static Flag b(String... names) {
-            return new Flag(false, names);
+        public void setPresent(boolean present) {
+            this.present = present;
+        }
+
+        public int getMaxArgs() {
+            return maxArgs;
+        }
+
+        public int getMinArgs() {
+            return minArgs;
+        }
+
+        public void setArgs(CommandArguments value) {
+            this.args = value;
+        }
+
+        public CommandArguments getArgs() {
+            return args;
         }
     }
 
-    private final CommandArguments args;
-    private final Map<String, Flag> flags = new HashMap<String, Flag>();
+    private final FlagSyntax syntax;
+    private final FlagSyntax fallbackSyntax;
+    private final Map<String, Flag> longFlags = new HashMap<>();
+    private final TCharObjectMap<Flag> shortFlags = new TCharObjectHashMap<>();
 
-    public CommandFlags(CommandArguments args) {
-        this.args = args;
+    public CommandFlags() {
+        this(null);
     }
 
-    public void registerFlags(Flag... flags) {
-        registerFlags(Arrays.asList(flags));
+    public CommandFlags(FlagSyntax syntax) {
+        this(syntax, DefaultFlagSyntax.INSTANCE);
     }
 
-    public void registerFlags(List<Flag> flags) {
+    public CommandFlags(FlagSyntax syntax, FlagSyntax fallbackSyntax) {
+        if (fallbackSyntax == null) {
+            throw new IllegalArgumentException("The fallbacSyntax must not be null");
+        }
+        this.syntax = syntax;
+        this.fallbackSyntax = fallbackSyntax;
+    }
+
+    public CommandFlags add(Flag... flags) {
+        return add(Arrays.asList(flags));
+    }
+
+    public CommandFlags add(List<Flag> flags) {
         for (Flag f : flags) {
-            for (String name : f.getNames()) {
-                this.flags.put(name, f);
+            for (String name : f.getLongNames()) {
+                this.longFlags.put(name, f);
+            }
+            for (char name : f.getShortNames()) {
+                this.shortFlags.put(name, f);
             }
         }
+        return this;
     }
 
     /**
-     * Parse flags from the attached {@link CommandArguments} instance
+     * Parse flags from the passed {@link CommandArguments} instance
      *
-     * @return Whether any flags were parsed
      * @throws ArgumentParseException if an invalid flag is provided
      */
-    public boolean parse() throws ArgumentParseException {
-        boolean anyFlags = false;
-        int oldIndex = args.index; // Make argument index invalid when parsing flags
-        args.index = args.length() + 1;
-        for (Iterator<String> it = args.getLive().iterator(); it.hasNext();) {
-            if (tryExtractFlags(it)) {
-                anyFlags = true;
+    public void parse(CommandArguments args, String argName) throws ArgumentParseException {
+        FlagSyntax syntax = this.syntax;
+
+        if (syntax == null) {
+            Syntax cmdSyntax = args.getSyntax();
+            if (cmdSyntax != null) {
+                syntax = cmdSyntax.getDefaultFlagSyntax();
             }
         }
-        args.index = oldIndex;
-        return anyFlags;
+        if (syntax == null) {
+            syntax = this.fallbackSyntax;
+        }
+        syntax.parse(this, args, argName);
+        args.success(argName, this);
     }
 
-    /**
-     * Handle a flag 'word' -- an element in the arguments list
-     * May result in multiple flags
-     *
-     * @param it The iterator to draw the arguments from
-     * @return Whether any flags were successfully parsed
-     * @throws ArgumentParseException if an invalid or incomplete flag is provided
-     */
-    protected boolean tryExtractFlags(Iterator<String> it) throws ArgumentParseException {
-        String arg = it.next();
-        Matcher match = FLAG_REGEX.matcher(arg);
-        if (!match.matches()) {
-            return false;
-        }
-
-        String rawFlag = match.group("key");
-        try {
-            NumberFormat.getInstance().parse(rawFlag);
-            // If it's a number, it's not a flag
-            return false;
-        } catch (ParseException ex) {
-        }
-
-        it.remove();
-
-        if (rawFlag.startsWith("-")) { // Long flag in form --flag
-            rawFlag = rawFlag.substring(1);
-            handleFlag(it, rawFlag, match.group("value"));
-        } else {
-            for (char c : rawFlag.toCharArray()) {
-                handleFlag(it, String.valueOf(c), null);
-            }
-        }
-        return true;
+    public boolean hasFlag(String name) {
+        return longFlags.containsKey(name) || (name.length() == 1 && shortFlags.containsKey(name.charAt(0)));
     }
 
-    /**
-     * Handles a flag.
-     * 3 flag types:
-     * <ul>
-     *     <li>{@code --name=value} - These flags do not have to be defined in advance, and can replace any named positional arguments</li>
-     *     <li>{@code -abc [value]} - These must be defined in advance, can optionally have a value. Multiple flags can be combined in one 'word'</li>
-     *     <li>{@code --name [value]} - These must be defined in advance, can optionally have a value. Each 'word' contains one multicharacter flag name</li>
-     * </ul>
-     *
-     * @param it The iterator to source values from
-     * @param name The name of the argument
-     * @param value A predefined argument, for the first type of flag (shown above)
-     * @throws ArgumentParseException when an invalid flag is presented.
-     */
-    protected void handleFlag(Iterator<String> it, String name, String value) throws ArgumentParseException {
-        Flag f = flags.get(name);
-        if (f == null && value == null) {
-            throw args.failure(name, "Undefined flag presented", false);
-        } else if (f != null) {
-            name = f.getNames()[0];
-        }
-
-        if (args.has(name)) {
-            throw args.failure(name, "This argument has already been provided!", false);
-        }
-
-        if (value != null) {
-            args.setArgOverride(name, value);
-            args.popString(name);
-        } else if (f.isValue()) {
-            if (!it.hasNext()) {
-                throw args.failure(name, "No value for flag requiring value!", false);
-            }
-            args.setArgOverride(name, it.next());
-            args.popString(name);
-            it.remove();
-        } else {
-            args.setArgOverride(name, "true");
-            args.popBoolean(name);
-        }
+    public boolean hasFlag(char shortName) {
+        return shortFlags.containsKey(shortName);
     }
 
-    public boolean hasFlag(String flag) {
-        Flag f = flags.get(flag);
-        if (f == null) {
-            return false;
-        }
-        flag = f.getNames()[0];
-        return args.has(flag);
+    public Flag getLongFlag(String name) {
+        return longFlags.get(name);
     }
+
+    public Flag getFlag(String name) {
+        Flag flag = longFlags.get(name);
+        if (flag == null && name.length() == 1) {
+            flag = shortFlags.get(name.charAt(0));
+        }
+        return flag;
+    }
+
+    public Flag getFlag(char shortName) {
+        return shortFlags.get(shortName);
+    }
+
+    // Flag addition helpers
+
+    public CommandFlags b(String... names) {
+        Flag flag = new Flag(names, new char[0], 0, 0);
+        this.add(flag);
+        return this;
+    }
+
+    public CommandFlags b(char... shortNames) {
+        Flag flag = new Flag(new String[0], shortNames, 0, 0);
+        this.add(flag);
+        return this;
+    }
+
+    public CommandFlags v(String... names) {
+        Flag flag = new Flag(names, new char[0], 1, 1);
+        this.add(flag);
+        return this;
+    }
+
+    public CommandFlags v(char... shortNames) {
+        Flag flag = new Flag(new String[0], shortNames, 1, 1);
+        this.add(flag);
+        return this;
+    }
+
 }

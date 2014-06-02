@@ -58,7 +58,7 @@ public class CommandArguments {
     private final Map<String, String> argOverrides = new HashMap<String, String>();
     private final List<String> args;
     private final TIntList paddings;
-    private final CommandFlags flags;
+// private final CommandFlags flags;
     int index = 0;
     private int depth = 0;
     private Pair<String, Integer> unclosedQuote;
@@ -68,7 +68,7 @@ public class CommandArguments {
 
     public CommandArguments(List<String> args) {
         this.args = new ArrayList<String>(args);
-        this.flags = new CommandFlags(this);
+// this.flags = new CommandFlags(this);
         this.unclosedQuote = null;
         this.allUnescaped = true;
         this.separator = " ";
@@ -86,7 +86,7 @@ public class CommandArguments {
         this.unclosedQuote = syntax.splitNoEmpties(args, split, paddings);  // modifies the lists
         this.args = split;
 
-        this.flags = null; // new CommandFlags(this);
+// this.flags = null; // new CommandFlags(this);
         this.allUnescaped = false;
         this.syntax = syntax;
         this.separator = syntax.getSeparator();
@@ -125,6 +125,10 @@ public class CommandArguments {
 
     public String getSeparator() {
         return separator;
+    }
+
+    public Syntax getSyntax() {
+        return this.syntax;
     }
 
     /**
@@ -221,10 +225,6 @@ public class CommandArguments {
             return argumentToOffset(position);
         }
         return argumentToOffset(new Vector2i(position.getX(), 0));
-    }
-
-    public CommandFlags flags() {
-        return this.flags;
     }
 
     public String getPastCommandString() {
@@ -515,6 +515,11 @@ public class CommandArguments {
         return popString(SUBCOMMAND_ARGNAME + this.depth++);
     }
 
+    public CommandFlags popFlags(String argName, CommandFlags flags) throws ArgumentParseException {
+        flags.parse(this, argName);
+        return flags;
+    }
+
     /**
      * Pop a {@link Vector3f}.
      * Accepts either x y z or x,y,z syntax
@@ -709,6 +714,10 @@ public class CommandArguments {
             return def;
         }
         return f;
+    }
+
+    public CommandFlags getFlags(String key) {
+        return get(key, CommandFlags.class);
     }
 
     /**

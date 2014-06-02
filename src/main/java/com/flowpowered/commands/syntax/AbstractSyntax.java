@@ -10,9 +10,15 @@ import org.apache.commons.lang3.tuple.Pair;
 public abstract class AbstractSyntax implements Syntax {
 
     private final String separator;
+    private final FlagSyntax flagSyntax;
 
     public AbstractSyntax(String separator) {
+        this(separator, null);
+    }
+
+    public AbstractSyntax(String separator, FlagSyntax defaultFlagSyntax) {
         this.separator = separator;
+        this.flagSyntax = defaultFlagSyntax;
     }
 
     @Override
@@ -42,4 +48,8 @@ public abstract class AbstractSyntax implements Syntax {
         return separator;
     }
 
+    @Override
+    public FlagSyntax getDefaultFlagSyntax() {
+        return flagSyntax;
+    }
 }

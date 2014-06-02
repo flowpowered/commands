@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class DefaultSyntax extends AbstractSyntax {
 
     public DefaultSyntax() {
-        super(" ");
+        super(" ", DefaultFlagSyntax.INSTANCE);
     }
 
     @Override
