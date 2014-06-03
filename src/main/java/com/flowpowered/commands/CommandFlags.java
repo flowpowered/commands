@@ -24,12 +24,21 @@
 package com.flowpowered.commands;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import gnu.trove.TCharCollection;
+import gnu.trove.TCollections;
+import gnu.trove.iterator.TCharIterator;
 import gnu.trove.map.TCharObjectMap;
 import gnu.trove.map.hash.TCharObjectHashMap;
+import gnu.trove.set.TCharSet;
+import gnu.trove.set.hash.TCharHashSet;
 
 import com.flowpowered.commands.syntax.DefaultFlagSyntax;
 import com.flowpowered.commands.syntax.FlagSyntax;
@@ -43,27 +52,34 @@ public class CommandFlags {
     public static final String FLAG_ARGNAME = "flags.";
 
     public static class Flag {
-        private final String[] longNames;
-        private final char[] shortNames;
+        private final Set<String> longNames;
+        private final TCharSet shortNames;
         private final int minArgs;
         private final int maxArgs;
         private CommandArguments args;
         private boolean present;
 
-        // TODO: Sets maybe?
         public Flag(String[] longNames, char[] shortNames, int minArgs, int maxArgs) {
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
-            this.longNames = longNames;
-            this.shortNames = shortNames;
+            this.longNames = new HashSet<>();
+            Collections.addAll(this.longNames, longNames);
+            this.shortNames = new TCharHashSet(shortNames);
         }
 
-        public String[] getLongNames() {
-            return longNames;
+        public Flag(Collection<String> longNames, TCharCollection shortNames, int minArgs, int maxArgs) {
+            this.minArgs = minArgs;
+            this.maxArgs = maxArgs;
+            this.longNames = new HashSet<>(longNames);
+            this.shortNames = new TCharHashSet(shortNames);
         }
 
-        public char[] getShortNames() {
-            return shortNames;
+        public Set<String> getLongNames() {
+            return Collections.unmodifiableSet(longNames);
+        }
+
+        public TCharSet getShortNames() {
+            return TCollections.unmodifiableSet(shortNames);
         }
 
         public boolean isPresent() {
@@ -121,12 +137,15 @@ public class CommandFlags {
             for (String name : f.getLongNames()) {
                 this.longFlags.put(name, f);
             }
-            for (char name : f.getShortNames()) {
-                this.shortFlags.put(name, f);
+            TCharIterator it = f.getShortNames().iterator();
+            while (it.hasNext()) {
+                this.shortFlags.put(it.next(), f);
             }
         }
         return this;
     }
+
+    // TODO: Add a way to sum/combine two sets of flags
 
     /**
      * Parse flags from the passed {@link CommandArguments} instance
@@ -146,7 +165,7 @@ public class CommandFlags {
             syntax = this.fallbackSyntax;
         }
         syntax.parse(this, args, argName);
-        args.success(argName, this);
+        args.success(argName, this, true); // This is "fallback value" so that we don't advance the CommandArgument's index. FlagSyntax has already advanced it as many times as needed.
     }
 
     public boolean hasFlag(String name) {

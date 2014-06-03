@@ -58,7 +58,6 @@ public class CommandArguments {
     private final Map<String, String> argOverrides = new HashMap<String, String>();
     private final List<String> args;
     private final TIntList paddings;
-// private final CommandFlags flags;
     int index = 0;
     private int depth = 0;
     private Pair<String, Integer> unclosedQuote;
@@ -68,7 +67,6 @@ public class CommandArguments {
 
     public CommandArguments(List<String> args) {
         this.args = new ArrayList<String>(args);
-// this.flags = new CommandFlags(this);
         this.unclosedQuote = null;
         this.allUnescaped = true;
         this.separator = " ";
@@ -86,7 +84,6 @@ public class CommandArguments {
         this.unclosedQuote = syntax.splitNoEmpties(args, split, paddings);  // modifies the lists
         this.args = split;
 
-// this.flags = null; // new CommandFlags(this);
         this.allUnescaped = false;
         this.syntax = syntax;
         this.separator = syntax.getSeparator();
@@ -281,8 +278,8 @@ public class CommandArguments {
         } else if (this.index >= this.args.size()) {
             this.commandString.append(" [").append(argName).append("]");
         } else {
-            this.commandString.append(this.args.get(this.index));
             if (!fallbackValue) {
+                this.commandString.append(this.args.get(this.index));
                 this.index++; // And increment index
             }
         }
@@ -345,7 +342,6 @@ public class CommandArguments {
             throw failure(argName, "Unmatched quoted string! Quote char: " + this.unclosedQuote, false);
         }
 
-        // Quoted argument parsing -- comparts and removes unnecessary arguments
         String current = this.args.get(this.index);
 
         if (allUnescaped || !unescape) {

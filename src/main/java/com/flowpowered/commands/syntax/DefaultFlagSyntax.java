@@ -22,7 +22,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
     public void parse(CommandFlags flags, CommandArguments args, String name) throws ArgumentParseException {
         int i = 0;
         String current;
-        while (true) {
+        while (args.hasMore()) {
             String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
             current = args.currentArgument(curArgName);
             Matcher lMatcher = LONG_FLAG_REGEX.matcher(current);
@@ -36,8 +36,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 args.success(curArgName, current);
                 parseFlagArgs(args, name, curArgName, flagName, flag);
                 flag.setPresent(true);
-            }
-            if (sMatcher.matches()) {
+            } else if (sMatcher.matches()) {
                 String key = sMatcher.group("key");
                 TCharList chars = TCharArrayList.wrap(key.toCharArray());
                 TCharIterator it = chars.iterator();
@@ -55,7 +54,10 @@ public class DefaultFlagSyntax implements FlagSyntax {
                     }
                     flag.setPresent(true);
                 }
+                args.success(curArgName, current);
                 parseFlagArgs(args, name, curArgName, String.valueOf(flagName), flag);
+            } else {
+                return;
             }
         }
 
@@ -63,11 +65,11 @@ public class DefaultFlagSyntax implements FlagSyntax {
 
     private void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag) throws ArgumentParseException {
         List<String> flagArgs = new LinkedList<>();
-        while (flagArgs.size() < flag.getMaxArgs()) {
+        while (flagArgs.size() < flag.getMaxArgs() && args.hasMore()) {
             int argNum = flagArgs.size();
             String curFlagArgName = curArgName + ":" + argNum;
             String current = args.currentArgument(curFlagArgName);
-            if (LONG_FLAG_REGEX.matcher(current).matches() || LONG_FLAG_REGEX.matcher(current).matches()) {
+            if (LONG_FLAG_REGEX.matcher(current).matches() || SHORT_FLAG_REGEX.matcher(current).matches()) {
                 break;
             }
             flagArgs.add(current);
@@ -76,9 +78,9 @@ public class DefaultFlagSyntax implements FlagSyntax {
         if (flagArgs.size() < flag.getMinArgs()) {
             throw args.failure(name, "Flag " + flagName + " requires " + flag.getMinArgs() + " arguments, but only " + flagArgs.size() + " was present.", false);
         }
-        flag.setArgs(new CommandArguments(flagArgs));
+        flag.setArgs(new CommandArguments(flagArgs)); // TODO: Put the flag itself in the CommandArguments as an already parsed arg?
 
     }
 
-    public static DefaultFlagSyntax INSTANCE = new DefaultFlagSyntax();
+    public static final DefaultFlagSyntax INSTANCE = new DefaultFlagSyntax();
 }
