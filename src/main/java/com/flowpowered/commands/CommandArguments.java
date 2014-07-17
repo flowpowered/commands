@@ -398,7 +398,7 @@ public class CommandArguments {
         return QUOTE_TOESCAPE_REGEX.matcher(input).replaceAll("\\\\$0");
     }
 
-    protected boolean setArgOverride(String name, String value) {
+    public boolean setArgOverride(String name, String value) {
         if (!this.argOverrides.containsKey(name)) {
             this.argOverrides.put(name, value);
             return true;

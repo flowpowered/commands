@@ -11,6 +11,10 @@ public class DefaultSyntax extends AbstractSyntax {
     public DefaultSyntax() {
         super(" ", DefaultFlagSyntax.INSTANCE);
     }
+    
+    public DefaultSyntax(FlagSyntax flagSyntax) {
+    	super(" ", flagSyntax);
+    }
 
     @Override
     public Pair<String, Integer> split(String input, List<String> output) {
