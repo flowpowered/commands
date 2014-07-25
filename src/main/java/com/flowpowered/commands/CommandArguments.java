@@ -241,14 +241,7 @@ public class CommandArguments {
         String rawStart = currentArgument(argName, true, false).substring(potentialCandidatesOffset, Math.max(potentialCandidatesOffset, position.getY()));
         String start = unescape(rawStart);
         SortedSet<String> matches = potentialCandidates.tailSet(start);
-        String unclosedQuote = "";
-        Pair<String, Integer> quote = getUnclosedQuote();
-        if (quote != null) {
-            int quoteArgNumber = offsetToArgument(quote.getRight()).getX();
-            if (quoteArgNumber <= 0) {
-                unclosedQuote = quote.getLeft();
-            }
-        }
+        String unclosedQuote = getReachedUnclosedQuote();
         for (String match : matches) {
             if (!match.startsWith(start)) {
                 break;
@@ -277,7 +270,21 @@ public class CommandArguments {
         }
         // Now that they're in order, result1 is before result2, so it's the final one we return. Therefore, candidates1 don't need processing.
         outCandidates.addAll(candidates1);
+
+        if (diff == 0) {
+            // Optimization - don't need to add prefixes.
+            outCandidates.addAll(candidates2);
+            return result1;
+        }
         Vector2i pos1 = offsetToArgument(result1);
+
+        String closingQuote = getReachedUnclosedQuote() + getSeparator();
+        if (candidates2.size() == 1 && candidates2.contains(closingQuote)) {
+            // If the further one has only closing quote, it means it's the automatic closing quote from CommandArguments.complete(), which means it has no idea how to complete this.
+            // candidates1 has something better, because it completes relatively to something earlier. Therefore we discard candidates2's closing quote.
+            // And because we've just discarded the only entry of candidates2, we can as well discard the whole list.
+            return result1;
+        }
         try {
             String prefix = currentArgument(argName, true, false).substring(pos1.getY(), pos1.getY() + diff);
             for (String candidate : candidates2) {
@@ -288,6 +295,17 @@ public class CommandArguments {
         }
 
         return result1;
+    }
+
+    protected String getReachedUnclosedQuote() {
+        Pair<String, Integer> quote = getUnclosedQuote();
+        if (quote != null) {
+            int quoteArgNumber = offsetToArgument(quote.getRight()).getX();
+            if (quoteArgNumber <= 0) {
+                return quote.getLeft();
+            }
+        }
+        return "";
     }
 
     // TODO: Don't declare throws.
