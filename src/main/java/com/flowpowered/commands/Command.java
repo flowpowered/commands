@@ -40,11 +40,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.flowpowered.math.vector.Vector2i;
+
+import com.flowpowered.commons.Named;
+
 import com.flowpowered.commands.exception.InsufficientPermissionsException;
 import com.flowpowered.commands.exception.UnknownSubcommandException;
 import com.flowpowered.commands.filter.CommandFilter;
-import com.flowpowered.commons.Named;
-import com.flowpowered.math.vector.Vector2i;
 
 public class Command implements Named {
     private final String name;
@@ -179,21 +181,20 @@ public class Command implements Named {
 
         @Override
         public boolean step(Command command, CommandSender sender, CommandArguments args) throws CommandException {
-            Vector2i argindex = args.offsetToArgument(cursor); // x is argument index, y is offset in the argument
             CommandExecutor executor = command.getExecutor();
             if (executor != null) {
                 if (!(executor instanceof CompletingCommandExecutor)) {
                     return true; // We can't complete anything, cause the command doesn't support it. We're done.
                 }
                 List<String> cands = new ArrayList<>();
-                int pos = ((CompletingCommandExecutor) executor).complete(command, sender, args, argindex.getX(), argindex.getY(), cands);
+                int pos = ((CompletingCommandExecutor) executor).complete(command, sender, args, cursor, cands);
                 if (pos >= -1) {
                     position = pos;
                     candidates = cands;
                     return true; // The executor completed one of it's arguments. Completion is found, we're done.
                 }
-                argindex = args.offsetToArgument(cursor);
             }
+            Vector2i argindex = args.offsetToArgument(cursor); // x is argument index, y is offset in the argument
             if (argindex.getX() > 0) {
                 return false; // Something further than next arg should be completed, find the child as usual and call us again.
             }

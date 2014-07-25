@@ -41,10 +41,12 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
-import com.flowpowered.commands.syntax.Syntax;
-import com.flowpowered.commons.StringUtil;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
+
+import com.flowpowered.commons.StringUtil;
+
+import com.flowpowered.commands.syntax.Syntax;
 
 /**
  * This class is used as a wrapper for command arguments to make them easily
@@ -590,8 +592,8 @@ public class CommandArguments {
     }
 
     // TODO: A version w/o command and sender, that ignores callbacks?
-    public int completeFlags(Command command, CommandSender sender, String argName, CommandFlags flags, int argNumber, int offset, List<String> candidates) throws ArgumentParseException {
-        return flags.complete(command, sender, this, argName, argNumber, offset, candidates);
+    public int completeFlags(Command command, CommandSender sender, String argName, CommandFlags flags, int cursor, List<String> candidates) throws ArgumentParseException {
+        return flags.complete(command, sender, this, argName, cursor, candidates);
     }
 
     /**

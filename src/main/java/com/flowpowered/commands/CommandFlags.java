@@ -40,8 +40,6 @@ import gnu.trove.map.hash.TCharObjectHashMap;
 import gnu.trove.set.TCharSet;
 import gnu.trove.set.hash.TCharHashSet;
 
-import com.flowpowered.math.vector.Vector2i;
-
 import com.flowpowered.commands.syntax.DefaultFlagSyntax;
 import com.flowpowered.commands.syntax.FlagSyntax;
 import com.flowpowered.commands.syntax.Syntax;
@@ -203,11 +201,11 @@ public class CommandFlags {
      * @param offset
      * @param candidates
      * @return the position in the commandline to which completion will be relative, or -1 if can't complete, or -2 if all the flags were specified, and the command should parse/complete further arguments
-     * @throws ArgumentParseException 
+     * @throws ArgumentParseException
      */
-    public int complete(Command command, CommandSender sender, CommandArguments args, String argName, int argNumber, int offset, List<String> candidates) throws ArgumentParseException {
+    public int complete(Command command, CommandSender sender, CommandArguments args, String argName, int cursor, List<String> candidates) throws ArgumentParseException {
         FlagSyntax syntax = findSyntax(args);
-        return syntax.complete(command, sender, this, args, argName, args.argumentToOffset(new Vector2i(argNumber, offset)), candidates);
+        return syntax.complete(command, sender, this, args, argName, cursor, candidates);
     }
 
     public boolean hasFlag(String name) {
