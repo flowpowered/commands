@@ -263,6 +263,39 @@ public class CommandArguments {
         return argumentToOffset(new Vector2i(position.getX(), potentialCandidatesOffset));
     }
 
+    public int mergeCompletions(String argName, int result1, List<String> candidates1, int result2, List<String> candidates2, List<String> outCandidates) {
+        int diff = result2 - result1;
+        if (diff < 0) {
+            // Swap them
+            return mergeCompletions(argName, result2, candidates2, result1, candidates1, outCandidates);
+        }
+        if (result1 < 0) {
+            outCandidates.addAll(candidates2);
+            return result2;
+        }
+        // Now that they're in order, result1 is before result2, so it's the final one we return. Therefore, candidates1 don't need processing.
+        outCandidates.addAll(candidates1);
+        Vector2i pos1 = offsetToArgument(result1);
+        try {
+            String prefix = currentArgument(argName, true, false).substring(pos1.getY(), pos1.getY() + diff);
+            for (String candidate : candidates2) {
+                outCandidates.add(prefix + candidate);
+            }
+        } catch (ArgumentParseException e) {
+            throw new IllegalStateException(e);
+        }
+
+        return result1;
+    }
+
+    // TODO: Don't declare throws.
+    public int completeAndMerge(String argName, Vector2i position, SortedSet<String> potentialCandidates, int result2, List<String> candidates2, List<String> outCandidates)
+            throws ArgumentParseException {
+        List<String> candidates1 = new ArrayList<String>();
+        int result1 = complete(argName, position, potentialCandidates, candidates1);
+        return mergeCompletions(argName, result1, candidates1, result2, candidates2, outCandidates);
+    }
+
     public String getPastCommandString() {
         return this.commandString.toString().trim();
     }
