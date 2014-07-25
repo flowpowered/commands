@@ -40,6 +40,8 @@ import gnu.trove.map.hash.TCharObjectHashMap;
 import gnu.trove.set.TCharSet;
 import gnu.trove.set.hash.TCharHashSet;
 
+import com.flowpowered.math.vector.Vector2i;
+
 import com.flowpowered.commands.syntax.DefaultFlagSyntax;
 import com.flowpowered.commands.syntax.FlagSyntax;
 import com.flowpowered.commands.syntax.Syntax;
@@ -58,6 +60,7 @@ public class CommandFlags {
         private final int maxArgs;
         private CommandArguments args;
         private boolean present;
+        private FlagArgCompleter completer;
 
         public Flag(String[] longNames, char[] shortNames, int minArgs, int maxArgs) {
             this.minArgs = minArgs;
@@ -105,12 +108,32 @@ public class CommandFlags {
         public CommandArguments getArgs() {
             return args;
         }
+
+        public FlagArgCompleter getCompleter() {
+            return completer;
+        }
+
+        public void setCompleter(FlagArgCompleter completer) {
+            this.completer = completer;
+        }
+
+        public int complete(Command command, CommandSender sender, CommandArguments args, CommandFlags flags, int cursor, List<String> candidates) {
+            if (completer == null) {
+                return -1;
+            }
+            return completer.complete(command, sender, args, flags, this, this.args, cursor, candidates);
+        }
+    }
+
+    public static interface FlagArgCompleter {
+        public int complete(Command command, CommandSender sender, CommandArguments args, CommandFlags flags, Flag flag, CommandArguments flagArgs, int offset, List<String> candidates);
     }
 
     private final FlagSyntax syntax;
     private final FlagSyntax fallbackSyntax;
     private final Map<String, Flag> longFlags = new HashMap<>();
     private final TCharObjectMap<Flag> shortFlags = new TCharObjectHashMap<>();
+    private boolean canCompleteNextArgToo = false;
 
     public CommandFlags() {
         this(null);
@@ -147,12 +170,7 @@ public class CommandFlags {
 
     // TODO: Add a way to sum/combine two sets of flags
 
-    /**
-     * Parse flags from the passed {@link CommandArguments} instance
-     *
-     * @throws ArgumentParseException if an invalid flag is provided
-     */
-    public void parse(CommandArguments args, String argName) throws ArgumentParseException {
+    protected FlagSyntax findSyntax(CommandArguments args) {
         FlagSyntax syntax = this.syntax;
 
         if (syntax == null) {
@@ -164,8 +182,32 @@ public class CommandFlags {
         if (syntax == null) {
             syntax = this.fallbackSyntax;
         }
+        return syntax;
+    }
+
+    /**
+     * Parse flags from the passed {@link CommandArguments} instance
+     *
+     * @throws ArgumentParseException if an invalid flag is provided
+     */
+    public void parse(CommandArguments args, String argName) throws ArgumentParseException {
+        FlagSyntax syntax = findSyntax(args);
         syntax.parse(this, args, argName);
         args.success(argName, this, true); // This is "fallback value" so that we don't advance the CommandArgument's index. FlagSyntax has already advanced it as many times as needed.
+    }
+
+    /**
+     * @param args
+     * @param argName
+     * @param argNumber
+     * @param offset
+     * @param candidates
+     * @return the position in the commandline to which completion will be relative, or -1 if can't complete, or -2 if all the flags were specified, and the command should parse/complete further arguments
+     * @throws ArgumentParseException 
+     */
+    public int complete(Command command, CommandSender sender, CommandArguments args, String argName, int argNumber, int offset, List<String> candidates) throws ArgumentParseException {
+        FlagSyntax syntax = findSyntax(args);
+        return syntax.complete(command, sender, this, args, argName, args.argumentToOffset(new Vector2i(argNumber, offset)), candidates);
     }
 
     public boolean hasFlag(String name) {
@@ -190,6 +232,22 @@ public class CommandFlags {
 
     public Flag getFlag(char shortName) {
         return shortFlags.get(shortName);
+    }
+
+    public Map<String, Flag> getLongFlags() {
+        return Collections.unmodifiableMap(longFlags);
+    }
+
+    public TCharObjectMap<Flag> getShortFlags() {
+        return TCollections.unmodifiableMap(shortFlags);
+    }
+
+    public void setCanCompleteNextArgToo(boolean can) {
+        canCompleteNextArgToo = can;
+    }
+
+    public boolean getCanCompleteNextArgToo() {
+        return canCompleteNextArgToo;
     }
 
     // Flag addition helpers

@@ -1,12 +1,15 @@
 package com.flowpowered.commands.syntax;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.flowpowered.commands.ArgumentParseException;
+import com.flowpowered.commands.Command;
 import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandFlags;
 import com.flowpowered.commands.CommandFlags.Flag;
+import com.flowpowered.commands.CommandSender;
 
 public class SpoutFlagSyntax implements FlagSyntax {
     public static final Pattern FLAG_REGEX = Pattern.compile("^-(?<key>-?[\\w]+)(?:=(?<value>.*))?$");
@@ -40,6 +43,12 @@ public class SpoutFlagSyntax implements FlagSyntax {
             }
         }
 
+    }
+
+    @Override
+    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws ArgumentParseException {
+        // TODO Auto-generated method stub
+        return -1;
     }
 
     /**

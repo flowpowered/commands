@@ -229,10 +229,14 @@ public class CommandArguments {
         return complete(argName, new Vector2i(argNumber, offset), potentialCandidates, candidates);
     }
 
-    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException { // TODO: Don't throw this
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+        return complete(argName, position, potentialCandidates, 0, candidates);
+    }
+
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, List<String> candidates) throws ArgumentParseException { // TODO: Don't throw this
         // TODO: Return -2 when the arg is overriden
         // TODO: Add an option to ignore case
-        String rawStart = currentArgument(argName, true, false).substring(0, Math.max(0, position.getY()));
+        String rawStart = currentArgument(argName, true, false).substring(potentialCandidatesOffset, Math.max(potentialCandidatesOffset, position.getY()));
         String start = unescape(rawStart);
         SortedSet<String> matches = potentialCandidates.tailSet(start);
         String unclosedQuote = "";
@@ -256,7 +260,7 @@ public class CommandArguments {
             candidates.add(unclosedQuote + getSeparator());
             return argumentToOffset(position);
         }
-        return argumentToOffset(new Vector2i(position.getX(), 0));
+        return argumentToOffset(new Vector2i(position.getX(), potentialCandidatesOffset));
     }
 
     public String getPastCommandString() {
@@ -550,6 +554,11 @@ public class CommandArguments {
     public CommandFlags popFlags(String argName, CommandFlags flags) throws ArgumentParseException {
         flags.parse(this, argName);
         return flags;
+    }
+
+    // TODO: A version w/o command and sender, that ignores callbacks?
+    public int completeFlags(Command command, CommandSender sender, String argName, CommandFlags flags, int argNumber, int offset, List<String> candidates) throws ArgumentParseException {
+        return flags.complete(command, sender, this, argName, argNumber, offset, candidates);
     }
 
     /**
