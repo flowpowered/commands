@@ -126,5 +126,5 @@ public class RegexSyntax extends AbstractSyntax {
             "\\\\([\"'])", // Unescape
             "['\"]", // Escape match
             "\\\\$0" // Escape replace
-            );
+    );
 }

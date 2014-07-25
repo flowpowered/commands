@@ -46,7 +46,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                     flagName = it.next();
                     flag = flags.getFlag(flagName);
                     if (flag == null) {
-                        //TODO: Throw sth? or maybe continue parsing other flags?
+                        // TODO: Throw sth? or maybe continue parsing other flags?
                         return;
                     }
                     if (it.hasNext() && flag.getMinArgs() != 0) {

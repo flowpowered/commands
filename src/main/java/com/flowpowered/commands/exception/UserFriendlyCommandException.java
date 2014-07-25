@@ -25,7 +25,6 @@ package com.flowpowered.commands.exception;
 
 import com.flowpowered.commands.CommandException;
 
-
 /**
  * An exception that is expected to occur when a user invokes a command, and doesn't signify any abnormal situation.
  * <p>

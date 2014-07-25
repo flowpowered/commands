@@ -10,33 +10,33 @@ import com.flowpowered.commands.CommandFlags.Flag;
 
 public class SpoutFlagSyntax implements FlagSyntax {
     public static final Pattern FLAG_REGEX = Pattern.compile("^-(?<key>-?[\\w]+)(?:=(?<value>.*))?$");
-    
+
     private final boolean overrideArgs;
-    
+
     public SpoutFlagSyntax(boolean overrideArgs) {
-    	super();
-    	this.overrideArgs = overrideArgs;
+        super();
+        this.overrideArgs = overrideArgs;
     }
 
     @Override
     public void parse(CommandFlags flags, CommandArguments args, String name) throws ArgumentParseException {
         int i = 0;
         while (args.hasMore()) {
-        	String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
-        	String current = args.currentArgument(curArgName);
-        	Matcher matcher = FLAG_REGEX.matcher(current);
-        	if (!matcher.matches()) {
-        		break;
-        	}
+            String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
+            String current = args.currentArgument(curArgName);
+            Matcher matcher = FLAG_REGEX.matcher(current);
+            if (!matcher.matches()) {
+                break;
+            }
             String flagName = matcher.group("key");
-        	args.success(curArgName, current);
+            args.success(curArgName, current);
             if (flagName.startsWith("-")) { // long --flag
-            	flagName = flagName.substring(1);
-            	handleFlag(flags, args, curArgName, flagName, matcher.group("value"));
+                flagName = flagName.substring(1);
+                handleFlag(flags, args, curArgName, flagName, matcher.group("value"));
             } else {
-            	for (char c : flagName.toCharArray()) {
-            		handleFlag(flags, args, curArgName, String.valueOf(c), null);
-            	}
+                for (char c : flagName.toCharArray()) {
+                    handleFlag(flags, args, curArgName, String.valueOf(c), null);
+                }
             }
         }
 
@@ -56,13 +56,13 @@ public class SpoutFlagSyntax implements FlagSyntax {
      * @param value A predefined argument, for the first type of flag (shown above)
      * @throws ArgumentParseException when an invalid flag is presented.
      */
-    
+
     protected void handleFlag(CommandFlags flags, CommandArguments args, String curArgName, String name, String value) throws ArgumentParseException {
         Flag f = flags.getFlag(name);
         if (f == null && (value == null || !overrideArgs)) {
             throw args.failure(name, "Undefined flag presented", false);
         } else if (f != null) {
-            name = f.getLongNames().iterator().next(); //FIXME: How do we know the set is consistent about it?
+            name = f.getLongNames().iterator().next(); // FIXME: How do we know the set is consistent about it?
         }
 
         if (overrideArgs && args.has(name)) {
@@ -70,15 +70,15 @@ public class SpoutFlagSyntax implements FlagSyntax {
         }
 
         if (value != null) {
-        	if (overrideArgs) {
-        		args.setArgOverride(name, value);
-        		args.success(name, value, true);
-        	}
-        	if (f != null) {
-        		f.setArgs(new CommandArguments(value));
-        	}
+            if (overrideArgs) {
+                args.setArgOverride(name, value);
+                args.success(name, value, true);
+            }
+            if (f != null) {
+                f.setArgs(new CommandArguments(value));
+            }
         } else if (f.getMinArgs() > 1) {
-        	throw new IllegalStateException("Tried to parse a multi-argument flag with SpoutFlagSyntax");
+            throw new IllegalStateException("Tried to parse a multi-argument flag with SpoutFlagSyntax");
         } else if (f.getMinArgs() == 1) {
             if (!args.hasMore()) {
                 throw args.failure(name, "No value for flag requiring value!", false);
@@ -86,22 +86,22 @@ public class SpoutFlagSyntax implements FlagSyntax {
             curArgName = curArgName + ":1";
             value = args.currentArgument(curArgName);
             if (overrideArgs) {
-            	args.setArgOverride(name, value);
-        		args.success(name, value, true);
+                args.setArgOverride(name, value);
+                args.success(name, value, true);
             }
-    		f.setArgs(new CommandArguments(value));
-    		args.success(curArgName, value);
+            f.setArgs(new CommandArguments(value));
+            args.success(curArgName, value);
         } else {
-        	if (overrideArgs) {
-        		args.setArgOverride(name, "true");
-        		args.success(name, true, true);
-        	}
+            if (overrideArgs) {
+                args.setArgOverride(name, "true");
+                args.success(name, true, true);
+            }
         }
         if (f != null) {
-        	f.setPresent(true);
+            f.setPresent(true);
         }
     }
 
-   public static SpoutFlagSyntax INSTANCE = new SpoutFlagSyntax(false);
-   public static SpoutFlagSyntax INSTANCE_OVERRIDING = new SpoutFlagSyntax(true);
+    public static SpoutFlagSyntax INSTANCE = new SpoutFlagSyntax(false);
+    public static SpoutFlagSyntax INSTANCE_OVERRIDING = new SpoutFlagSyntax(true);
 }

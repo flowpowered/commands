@@ -11,9 +11,9 @@ public class DefaultSyntax extends AbstractSyntax {
     public DefaultSyntax() {
         super(" ", DefaultFlagSyntax.INSTANCE);
     }
-    
+
     public DefaultSyntax(FlagSyntax flagSyntax) {
-    	super(" ", flagSyntax);
+        super(" ", flagSyntax);
     }
 
     @Override
