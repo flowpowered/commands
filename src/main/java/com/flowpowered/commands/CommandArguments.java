@@ -25,6 +25,7 @@ package com.flowpowered.commands;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class CommandArguments {
     private final Map<String, String> argOverrides = new HashMap<String, String>();
     private final List<String> args;
     private final TIntList paddings;
-    int index = 0;
+    private int index = 0;
     private int depth = 0;
     private Pair<String, Integer> unclosedQuote;
     private final boolean allUnescaped;
@@ -92,19 +93,14 @@ public class CommandArguments {
     /**
      * Returns all the remaining arguments.
      *
-     * @return all arguments
+     * @return remaining arguments
      */
     public List<String> get() {
-        return this.args.subList(this.index, this.args.size());
+        return Collections.unmodifiableList(this.args.subList(this.index, this.args.size()));
     }
 
-    /**
-     * Gives the mutable list of argument strings currently in use by this.
-     *
-     * @return the arguments
-     */
-    List<String> getLive() {
-        return this.args;
+    public List<String> getAll() {
+        return Collections.unmodifiableList(args);
     }
 
     /**
@@ -139,6 +135,10 @@ public class CommandArguments {
 
     public int remaining() {
         return this.args.size() - this.index;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public Pair<String, Integer> getUnclosedQuote() {
@@ -197,6 +197,8 @@ public class CommandArguments {
     }
 
     public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException { // TODO: Don't throw this
+        // TODO: Return -2 when the arg is overriden
+        // TODO: Add an option to ignore case
         String rawStart = currentArgument(argName, true, false).substring(0, Math.max(0, position.getY()));
         String start = unescape(rawStart);
         SortedSet<String> matches = potentialCandidates.tailSet(start);
@@ -218,7 +220,7 @@ public class CommandArguments {
             if (unclosedQuote == "") {
                 return -1;
             }
-            candidates.add(unclosedQuote);
+            candidates.add(unclosedQuote + getSeparator());
             return argumentToOffset(position);
         }
         return argumentToOffset(new Vector2i(position.getX(), 0));
@@ -420,6 +422,7 @@ public class CommandArguments {
      * @throws ArgumentParseException when unparsed arguments are present.
      */
     public void assertCompletelyParsed() throws ArgumentParseException {
+        // TODO: Maybe ignore the last arg if it's empty?
         if (this.index < this.args.size()) {
             throw failure("...", "Too many arguments are present!", false);
         }
