@@ -33,9 +33,11 @@ import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import gnu.trove.TCollections;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
@@ -84,6 +86,16 @@ public class CommandArguments {
         this.paddings = new TIntArrayList();
         this.unclosedQuote = syntax.splitNoEmpties(args, split, paddings);  // modifies the lists
         this.args = split;
+
+        this.allUnescaped = false;
+        this.syntax = syntax;
+        this.separator = syntax.getSeparator();
+    }
+
+    protected CommandArguments(List<String> args, TIntList paddings, Syntax syntax, Pair<String, Integer> unclosedQuote) {
+        this.paddings = paddings;
+        this.unclosedQuote = unclosedQuote;
+        this.args = args;
 
         this.allUnescaped = false;
         this.syntax = syntax;
@@ -139,6 +151,27 @@ public class CommandArguments {
 
     public int getIndex() {
         return index;
+    }
+
+    protected TIntList getPaddings() {
+        return TCollections.unmodifiableList(paddings);
+    }
+
+    /**
+     * @param begin - from which arg, inclusive
+     * @param end - to which arg, exclusive
+     * @return
+     */
+    public CommandArguments subArgs(int begin, int end) {
+        List<String> newArgs = new ArrayList<>(this.args.subList(begin, end));
+        TIntList newPaddings = new TIntArrayList(this.paddings.subList(begin, end));
+        int offset = absoluteArgumentToOffset(new Vector2i(begin, 0));
+        newPaddings.set(0, offset);
+        Pair<String, Integer> newUnclosedQuote = null;
+        if (unclosedQuote != null) {
+            newUnclosedQuote = new ImmutablePair<>(unclosedQuote.getLeft(), unclosedQuote.getRight());
+        }
+        return new CommandArguments(newArgs, newPaddings, syntax, newUnclosedQuote);
     }
 
     public Pair<String, Integer> getUnclosedQuote() {

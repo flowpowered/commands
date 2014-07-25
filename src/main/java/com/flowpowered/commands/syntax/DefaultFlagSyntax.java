@@ -1,7 +1,5 @@
 package com.flowpowered.commands.syntax;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,23 +61,27 @@ public class DefaultFlagSyntax implements FlagSyntax {
 
     }
 
-    private void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag) throws ArgumentParseException {
-        List<String> flagArgs = new LinkedList<>();
-        while (flagArgs.size() < flag.getMaxArgs() && args.hasMore()) {
-            int argNum = flagArgs.size();
+    protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag) throws ArgumentParseException {
+        int begin = args.getIndex();
+        int argNum = 0;
+        while (argNum < flag.getMaxArgs() && args.hasMore()) {
             String curFlagArgName = curArgName + ":" + argNum;
             String current = args.currentArgument(curFlagArgName);
             if (LONG_FLAG_REGEX.matcher(current).matches() || SHORT_FLAG_REGEX.matcher(current).matches()) {
+                // It's next flag!
+                // TODO: Also match "--" as end of flags.
                 break;
             }
-            flagArgs.add(current);
+            // TODO: Check for overrides, and copy them to the new args somehow
+            ++argNum;
             args.success(curFlagArgName, current);
         }
-        if (flagArgs.size() < flag.getMinArgs()) {
-            throw args.failure(name, "Flag " + flagName + " requires " + flag.getMinArgs() + " arguments, but only " + flagArgs.size() + " was present.", false);
+        if (argNum < flag.getMinArgs()) {
+            throw args.failure(name, "Flag " + flagName + " requires " + flag.getMinArgs() + " arguments, but only " + argNum + " was present.", false);
         }
-        flag.setArgs(new CommandArguments(flagArgs)); // TODO: Put the flag itself in the CommandArguments as an already parsed arg?
-
+        CommandArguments subArgs = args.subArgs(begin, args.getIndex());
+        flag.setArgs(subArgs);
+        // TODO: Put the flag itself in the CommandArguments as an already parsed arg?
     }
 
     public static final DefaultFlagSyntax INSTANCE = new DefaultFlagSyntax();
