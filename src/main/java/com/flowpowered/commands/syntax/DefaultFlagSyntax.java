@@ -37,19 +37,19 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.flowpowered.math.vector.Vector2i;
 
-import com.flowpowered.commands.ArgumentParseException;
 import com.flowpowered.commands.Command;
 import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandFlags;
 import com.flowpowered.commands.CommandFlags.Flag;
 import com.flowpowered.commands.CommandSender;
+import com.flowpowered.commands.InvalidArgumentException;
 
 public class DefaultFlagSyntax implements FlagSyntax {
     public static final Pattern LONG_FLAG_REGEX = Pattern.compile("^--(?<key>[\\w][\\w-]*)$");
     public static final Pattern SHORT_FLAG_REGEX = Pattern.compile("^-(?<key>[\\w]+)$");
 
     @Override
-    public void parse(CommandFlags flags, CommandArguments args, String name) throws ArgumentParseException {
+    public void parse(CommandFlags flags, CommandArguments args, String name) throws InvalidArgumentException {
         int i = 0;
         while (args.hasMore()) {
             String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
@@ -62,7 +62,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
 
     }
 
-    protected Pair<String, Flag> parseFlag(CommandFlags flags, CommandArguments args, String name, String curArgName) throws ArgumentParseException {
+    protected Pair<String, Flag> parseFlag(CommandFlags flags, CommandArguments args, String name, String curArgName) throws InvalidArgumentException {
         Pair<String, Flag> flagWithArgs;
         String current = args.currentArgument(curArgName);
         Matcher lMatcher = LONG_FLAG_REGEX.matcher(current);
@@ -103,7 +103,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
     }
 
     @Override
-    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws ArgumentParseException {
+    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws InvalidArgumentException {
         int i = 0;
         while (args.hasMore()) {
             String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
@@ -138,11 +138,10 @@ public class DefaultFlagSyntax implements FlagSyntax {
         }
         // End of args
         // How exactly did we end up here?
-        // TODO: Wrap a less user friendly exception inside the IllegalStateException
-        throw new IllegalStateException(args.failure(name, "WTF? Completion request at " + cursor + " is outside of args?", false));
+        throw new IllegalStateException(args.error(name, "WTF? Completion request at " + cursor + " is outside of args?"));
     }
 
-    protected int completeFlag(CommandFlags flags, CommandArguments args, String name, String curArgName, Vector2i argPos, List<String> candidates) throws ArgumentParseException {
+    protected int completeFlag(CommandFlags flags, CommandArguments args, String name, String curArgName, Vector2i argPos, List<String> candidates) throws InvalidArgumentException {
         flags.setCanCompleteNextArgToo(true); // Who knows, maybe it can also be a non-flag?
         String current = args.currentArgument(curArgName, true);
         Matcher sMatcher = SHORT_FLAG_REGEX.matcher(current);
@@ -177,11 +176,11 @@ public class DefaultFlagSyntax implements FlagSyntax {
         }
     }
 
-    protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag) throws ArgumentParseException {
+    protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag) throws InvalidArgumentException {
         parseFlagArgs(args, name, curArgName, flagName, flag, false);
     }
 
-    protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag, boolean completing) throws ArgumentParseException {
+    protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag, boolean completing) throws InvalidArgumentException {
         int begin = args.getIndex();
         int argNum = 0;
         while (argNum < flag.getMaxArgs() && args.hasMore()) {

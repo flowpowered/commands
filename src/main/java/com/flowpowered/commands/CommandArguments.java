@@ -223,19 +223,19 @@ public class CommandArguments {
         return absoluteArgumentToOffset(pos.add(index, 0));
     }
 
-    public int complete(String argName, int cursor, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+    public int complete(String argName, int cursor, SortedSet<String> potentialCandidates, List<String> candidates) throws InvalidArgumentException {
         return complete(argName, offsetToArgument(cursor), potentialCandidates, candidates);
     }
 
-    public int complete(String argName, int argNumber, int offset, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+    public int complete(String argName, int argNumber, int offset, SortedSet<String> potentialCandidates, List<String> candidates) throws InvalidArgumentException {
         return complete(argName, new Vector2i(argNumber, offset), potentialCandidates, candidates);
     }
 
-    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws ArgumentParseException {
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws InvalidArgumentException {
         return complete(argName, position, potentialCandidates, 0, candidates);
     }
 
-    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, List<String> candidates) throws ArgumentParseException { // TODO: Don't throw this
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, List<String> candidates) throws InvalidArgumentException { // TODO: Don't throw this
         // TODO: Return -2 when the arg is overriden
         // TODO: Add an option to ignore case
         String rawStart = currentArgument(argName, true, false).substring(potentialCandidatesOffset, Math.max(potentialCandidatesOffset, position.getY()));
@@ -290,7 +290,7 @@ public class CommandArguments {
             for (String candidate : candidates2) {
                 outCandidates.add(prefix + candidate);
             }
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             throw new IllegalStateException(e);
         }
 
@@ -310,7 +310,7 @@ public class CommandArguments {
 
     // TODO: Don't declare throws.
     public int completeAndMerge(String argName, Vector2i position, SortedSet<String> potentialCandidates, int result2, List<String> candidates2, List<String> outCandidates)
-            throws ArgumentParseException {
+            throws InvalidArgumentException {
         List<String> candidates1 = new ArrayList<String>();
         int result1 = complete(argName, position, potentialCandidates, candidates1);
         return mergeCompletions(argName, result1, candidates1, result2, candidates2, outCandidates);
@@ -323,24 +323,44 @@ public class CommandArguments {
     // State control
 
     /**
-     * Called when an error has occurred while parsing the specified argument
+     * Called when an error has occurred while parsing the specified argument due to the argument being invalid
      * Example:
      * <pre>
      *   if (success) {
      *       return success(argName, myValue);
      *     } else {
-     *       throw failure(argName, "I dun goofed", "some", "other", "options");
+     *       throw failure(argName, "I dun goofed", false);
      *     }
      * </pre>
      *
      * @param argName The name of the argument
      * @param error The error that occurred
-     * @param silenceable Whether the error is caused by syntax of single argument/permanently invalid provided value (or not)
+     * @param silenceable Whether the error can be silenced by using the default value for the argument
+     * @see InvalidArgumentException for more detail about meanings of args
+     * @return The exception -- must be thrown
+     */
+    public InvalidArgumentException failure(String argName, String error, boolean silenceable) {
+        return new InvalidArgumentException(this.commandString.toString().trim(), argName, error, silenceable);
+    }
+
+    /**
+     * Called when an error has occurred while parsing the specified argument despite the arguments being correct
+     * Example:
+     * <pre>
+     *     switch (x) {
+     *         ...
+     *     default:
+     *         throw error(argName, "How did we get here?");
+     *     }
+     * </pre>
+     *
+     * @param argName The name of the argument
+     * @param error The error that occurred
      * @see ArgumentParseException for more detail about meanings of args
      * @return The exception -- must be thrown
      */
-    public ArgumentParseException failure(String argName, String error, boolean silenceable) {
-        return new ArgumentParseException(this.commandString.toString().trim(), argName, error, silenceable);
+    public ArgumentParseException error(String argName, String error) {
+        return new ArgumentParseException(this.commandString.toString().trim(), argName, error);
     }
 
     /**
@@ -386,9 +406,9 @@ public class CommandArguments {
      * @param def The default value that could be returned
      * @param <T> The type of the argument
      * @return The default value, if error is safe to silence
-     * @throws ArgumentParseException if the error is not appropriate to be silenced
+     * @throws InvalidArgumentException if the error is not appropriate to be silenced
      */
-    public <T> T potentialDefault(ArgumentParseException e, T def) throws ArgumentParseException {
+    public <T> T potentialDefault(InvalidArgumentException e, T def) throws InvalidArgumentException {
         if (e.isSilenceable()) {
             return success(e.getInvalidArgName(), def, true);
         } else {
@@ -408,20 +428,20 @@ public class CommandArguments {
      *
      * @param argName The name of the argument
      * @return The argument with the current index.
-     * @throws ArgumentParseException if an invalid quoted string was attempted to be used
+     * @throws InvalidArgumentException if an invalid quoted string was attempted to be used
      * @see #success(String, Object)
      * @see #failure(String, String, boolean, String...)
      * @see #popString(String) for getting a string-typed argument
      */
-    public String currentArgument(String argName) throws ArgumentParseException {
+    public String currentArgument(String argName) throws InvalidArgumentException {
         return currentArgument(argName, false);
     }
 
-    public String currentArgument(String argName, boolean ignoreUnclosedQuote) throws ArgumentParseException {
+    public String currentArgument(String argName, boolean ignoreUnclosedQuote) throws InvalidArgumentException {
         return currentArgument(argName, ignoreUnclosedQuote, true);
     }
 
-    public String currentArgument(String argName, boolean ignoreUnclosedQuote, boolean unescape) throws ArgumentParseException {
+    public String currentArgument(String argName, boolean ignoreUnclosedQuote, boolean unescape) throws InvalidArgumentException {
         if (argName != null && this.argOverrides.containsKey(argName)) {
             return this.argOverrides.get(argName);
         }
@@ -509,9 +529,9 @@ public class CommandArguments {
 
     /**
      *
-     * @throws ArgumentParseException when unparsed arguments are present.
+     * @throws InvalidArgumentException when unparsed arguments are present.
      */
-    public void assertCompletelyParsed() throws ArgumentParseException {
+    public void assertCompletelyParsed() throws InvalidArgumentException {
         // TODO: Maybe ignore the last arg if it's empty?
         if (this.index < this.args.size()) {
             throw failure("...", "Too many arguments are present!", false);
@@ -520,20 +540,20 @@ public class CommandArguments {
 
     // Argument storage methods
 
-    public String popString(String argName) throws ArgumentParseException {
+    public String popString(String argName) throws InvalidArgumentException {
         String arg = currentArgument(argName);
         return success(argName, arg);
     }
 
-    public String popString(String argName, String def) throws ArgumentParseException {
+    public String popString(String argName, String def) throws InvalidArgumentException {
         try {
             return popString(argName);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }
 
-    public int popInteger(String argName) throws ArgumentParseException {
+    public int popInteger(String argName) throws InvalidArgumentException {
         String arg = currentArgument(argName);
         try {
             return success(argName, Integer.parseInt(arg));
@@ -542,15 +562,15 @@ public class CommandArguments {
         }
     }
 
-    public int popInteger(String argName, int def) throws ArgumentParseException {
+    public int popInteger(String argName, int def) throws InvalidArgumentException {
         try {
             return popInteger(argName);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }
 
-    public float popFloat(String argName) throws ArgumentParseException {
+    public float popFloat(String argName) throws InvalidArgumentException {
         String arg = currentArgument(argName);
         try {
             return success(argName, Float.parseFloat(arg));
@@ -559,15 +579,15 @@ public class CommandArguments {
         }
     }
 
-    public float popFloat(String argName, float def) throws ArgumentParseException {
+    public float popFloat(String argName, float def) throws InvalidArgumentException {
         try {
             return popFloat(argName);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }
 
-    public double popDouble(String argName) throws ArgumentParseException {
+    public double popDouble(String argName) throws InvalidArgumentException {
         String arg = currentArgument(argName);
         try {
             return success(argName, Double.parseDouble(arg));
@@ -576,15 +596,15 @@ public class CommandArguments {
         }
     }
 
-    public double popDouble(String argName, double def) throws ArgumentParseException {
+    public double popDouble(String argName, double def) throws InvalidArgumentException {
         try {
             return popDouble(argName);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }
 
-    public boolean popBoolean(String argName) throws ArgumentParseException {
+    public boolean popBoolean(String argName) throws InvalidArgumentException {
         String str = currentArgument(argName);
         if (!str.equalsIgnoreCase("true") && !str.equalsIgnoreCase("false")) {
             throw failure(argName, "Value '" + str + "' is not a boolean you silly!", false);
@@ -592,25 +612,25 @@ public class CommandArguments {
         return success(argName, Boolean.parseBoolean(str));
     }
 
-    public boolean popBoolean(String argName, boolean def) throws ArgumentParseException {
+    public boolean popBoolean(String argName, boolean def) throws InvalidArgumentException {
         try {
             return popBoolean(argName);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }
 
-    public String popSubCommand() throws ArgumentParseException {
+    public String popSubCommand() throws InvalidArgumentException {
         return popString(SUBCOMMAND_ARGNAME + this.depth++);
     }
 
-    public CommandFlags popFlags(String argName, CommandFlags flags) throws ArgumentParseException {
+    public CommandFlags popFlags(String argName, CommandFlags flags) throws InvalidArgumentException {
         flags.parse(this, argName);
         return flags;
     }
 
     // TODO: A version w/o command and sender, that ignores callbacks?
-    public int completeFlags(Command command, CommandSender sender, String argName, CommandFlags flags, int cursor, List<String> candidates) throws ArgumentParseException {
+    public int completeFlags(Command command, CommandSender sender, String argName, CommandFlags flags, int cursor, List<String> candidates) throws InvalidArgumentException {
         return flags.complete(command, sender, this, argName, cursor, candidates);
     }
 
@@ -621,9 +641,9 @@ public class CommandArguments {
      *
      * @param argName The name of the argument
      * @return A parsed vector
-     * @throws ArgumentParseException if not enough coordinates are provided or the coordinates are not floats
+     * @throws InvalidArgumentException if not enough coordinates are provided or the coordinates are not floats
      */
-    public Vector3f popVector3(String argName) throws ArgumentParseException {
+    public Vector3f popVector3(String argName) throws InvalidArgumentException {
         try {
             float x, y, z;
             if (currentArgument(argName).contains(",")) {
@@ -640,15 +660,15 @@ public class CommandArguments {
                 z = popFloat(null);
             }
             return success(argName, new Vector3f(x, y, z));
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             throw failure(argName, e.getReason(), e.isSilenceable());
         }
     }
 
-    public Vector3f popVector3(String argName, Vector3f def) throws ArgumentParseException {
+    public Vector3f popVector3(String argName, Vector3f def) throws InvalidArgumentException {
         try {
             return popVector3(argName);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }
@@ -683,9 +703,9 @@ public class CommandArguments {
      * @param enumClass The enum class to
      * @param <T> The type of enum
      * @return The enum value
-     * @throws ArgumentParseException if no argument is present or an unknown element is chosen.
+     * @throws InvalidArgumentException if no argument is present or an unknown element is chosen.
      */
-    public <T extends Enum<T>> T popEnumValue(String argName, Class<T> enumClass) throws ArgumentParseException {
+    public <T extends Enum<T>> T popEnumValue(String argName, Class<T> enumClass) throws InvalidArgumentException {
         String key = currentArgument(argName);
         T[] constants = enumClass.getEnumConstants();
         T value;
@@ -709,10 +729,10 @@ public class CommandArguments {
     /**
      * @see #popEnumValue(String, Class) non-defaulted version
      */
-    public <T extends Enum<T>> T popEnumValue(String argName, Class<T> enumClass, T def) throws ArgumentParseException {
+    public <T extends Enum<T>> T popEnumValue(String argName, Class<T> enumClass, T def) throws InvalidArgumentException {
         try {
             return popEnumValue(argName, enumClass);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }
@@ -722,7 +742,7 @@ public class CommandArguments {
      *
      * @return string from specified arg on
      */
-    public String popRemainingStrings(String argName) throws ArgumentParseException {
+    public String popRemainingStrings(String argName) throws InvalidArgumentException {
         if (!hasMore()) {
             failure(argName, "No arguments present", true);
         }
@@ -745,10 +765,10 @@ public class CommandArguments {
         return success(argName, ret);
     }
 
-    public String popRemainingStrings(String argName, String def) throws ArgumentParseException {
+    public String popRemainingStrings(String argName, String def) throws InvalidArgumentException {
         try {
             return popRemainingStrings(argName);
-        } catch (ArgumentParseException e) {
+        } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
         }
     }

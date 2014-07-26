@@ -1,7 +1,7 @@
 /*
  * This file is part of Flow Commands, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2013 Spout LLC <https://spout.org/>
+ * Copyright (c) 2013 Spout LLC <http://www.spout.org/>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +23,24 @@
  */
 package com.flowpowered.commands;
 
+import com.flowpowered.commands.exception.UserFriendlyCommandException;
 
 /**
- * Thrown when there's a problem parsing arguments and there's a need to capture the context of the problem.
- * May be wrapped inside a (subclass of) RumtimeException if the problem is the programmer's fault.
+ * Thrown when an invalid argument is encountered, either from there not being enough input data or invalid input data
  */
-public class ArgumentParseException extends CommandException implements CommandArgumentException {
+public class InvalidArgumentException extends UserFriendlyCommandException implements CommandArgumentException {
     private static final long serialVersionUID = -6994880605421981769L;
     private final String command;
     private final String invalidArgName;
     private final String reason;
+    private final boolean silenceable;
 
-    public ArgumentParseException(String command, String invalidArgName, String reason) {
-        super("\"/" + command + "\" - couldn't parse argument [" + invalidArgName + "]: " + reason); // "/command" couldn't parse argument [invalidArg]: reason
+    public InvalidArgumentException(String command, String invalidArgName, String reason, boolean silenceable) {
+        super("/" + command + " [" + invalidArgName + "] invalid: " + reason); // /command [invalidArg] invalid: reason
         this.command = command;
         this.invalidArgName = invalidArgName;
         this.reason = reason;
+        this.silenceable = silenceable;
     }
 
     @Override
@@ -56,4 +58,15 @@ public class ArgumentParseException extends CommandException implements CommandA
         return reason;
     }
 
+    /**
+     * Return whether this error is ever appropriate to silence.
+     * <p>
+     * Silencing is done by using the argument's default value in place of the invalid value. Silenceable exceptions are usually used in case the argument is missing.
+     * It is not recommended to use silenceable exceptions in cases where using the default may result in the command performing an action unintended by the player.
+     *
+     * @return {@code true} if appropriate, {@code false} otherwise
+     */
+    public boolean isSilenceable() {
+        return silenceable;
+    }
 }

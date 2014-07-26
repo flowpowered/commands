@@ -33,7 +33,6 @@ import com.flowpowered.commands.CommandException;
  * If the command is invoked by a user, the {@link #getMessage() message} of this exception should be presented to the user.
  * 
  */
-// TODO: Turn this into an interface?
 public class UserFriendlyCommandException extends CommandException {
     private static final long serialVersionUID = 8583142220176394240L;
 

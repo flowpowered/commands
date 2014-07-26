@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.flowpowered.commands.ArgumentParseException;
+import com.flowpowered.commands.InvalidArgumentException;
 import com.flowpowered.commands.Command;
 import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandFlags;
@@ -45,7 +45,7 @@ public class SpoutFlagSyntax implements FlagSyntax {
     }
 
     @Override
-    public void parse(CommandFlags flags, CommandArguments args, String name) throws ArgumentParseException {
+    public void parse(CommandFlags flags, CommandArguments args, String name) throws InvalidArgumentException {
         int i = 0;
         while (args.hasMore()) {
             String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
@@ -69,7 +69,7 @@ public class SpoutFlagSyntax implements FlagSyntax {
     }
 
     @Override
-    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws ArgumentParseException {
+    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws InvalidArgumentException {
         // TODO Auto-generated method stub
         return -1;
     }
@@ -86,10 +86,10 @@ public class SpoutFlagSyntax implements FlagSyntax {
      * @param it The iterator to source values from
      * @param name The name of the argument
      * @param value A predefined argument, for the first type of flag (shown above)
-     * @throws ArgumentParseException when an invalid flag is presented.
+     * @throws InvalidArgumentException when an invalid flag is presented.
      */
 
-    protected void handleFlag(CommandFlags flags, CommandArguments args, String curArgName, String name, String value) throws ArgumentParseException {
+    protected void handleFlag(CommandFlags flags, CommandArguments args, String curArgName, String name, String value) throws InvalidArgumentException {
         Flag f = flags.getFlag(name);
         if (f == null && (value == null || !overrideArgs)) {
             throw args.failure(name, "Undefined flag presented", false);

@@ -186,9 +186,9 @@ public class CommandFlags {
     /**
      * Parse flags from the passed {@link CommandArguments} instance
      *
-     * @throws ArgumentParseException if an invalid flag is provided
+     * @throws InvalidArgumentException if an invalid flag is provided
      */
-    public void parse(CommandArguments args, String argName) throws ArgumentParseException {
+    public void parse(CommandArguments args, String argName) throws InvalidArgumentException {
         FlagSyntax syntax = findSyntax(args);
         syntax.parse(this, args, argName);
         args.success(argName, this, true); // This is "fallback value" so that we don't advance the CommandArgument's index. FlagSyntax has already advanced it as many times as needed.
@@ -201,9 +201,9 @@ public class CommandFlags {
      * @param offset
      * @param candidates
      * @return the position in the commandline to which completion will be relative, or -1 if can't complete, or -2 if all the flags were specified, and the command should parse/complete further arguments
-     * @throws ArgumentParseException
+     * @throws InvalidArgumentException
      */
-    public int complete(Command command, CommandSender sender, CommandArguments args, String argName, int cursor, List<String> candidates) throws ArgumentParseException {
+    public int complete(Command command, CommandSender sender, CommandArguments args, String argName, int cursor, List<String> candidates) throws InvalidArgumentException {
         FlagSyntax syntax = findSyntax(args);
         return syntax.complete(command, sender, this, args, argName, cursor, candidates);
     }
