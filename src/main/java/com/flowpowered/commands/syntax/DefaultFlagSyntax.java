@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
 import gnu.trove.iterator.TCharIterator;
 import gnu.trove.list.TCharList;
 import gnu.trove.list.array.TCharArrayList;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,6 +45,7 @@ import com.flowpowered.commands.CommandFlags;
 import com.flowpowered.commands.CommandFlags.Flag;
 import com.flowpowered.commands.CommandSender;
 import com.flowpowered.commands.InvalidArgumentException;
+import com.flowpowered.commands.PositionallyOverridableCommandArguments;
 
 public class DefaultFlagSyntax implements FlagSyntax {
     public static final Pattern LONG_FLAG_REGEX = Pattern.compile("^--(?<key>[\\w][\\w-]*)$");
@@ -183,6 +186,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
 
     protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag, boolean completing) throws InvalidArgumentException {
         int begin = args.getIndex();
+        TIntObjectMap<String> overrides = new TIntObjectHashMap<String>();
         int argNum = 0;
         while (argNum < flag.getMaxArgs() && args.hasMore()) {
             String curFlagArgName = curArgName + ":" + argNum;
@@ -192,7 +196,9 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 // TODO: Also match "--" as end of flags.
                 break;
             }
-            // TODO: Check for overrides, and copy them to the new args somehow
+            if (args.hasOverride(curFlagArgName)) {
+                overrides.put(argNum, args.getOverride(curFlagArgName));
+            }
             ++argNum;
             args.success(curFlagArgName, current);
         }
@@ -200,7 +206,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
             throw args.failure(name, "Flag " + flagName + " requires " + flag.getMinArgs() + " arguments, but only " + argNum + " was present.", false);
         }
         CommandArguments subArgs = args.subArgs(begin, args.getIndex());
-        flag.setArgs(subArgs);
+        flag.setArgs(new PositionallyOverridableCommandArguments(subArgs, overrides));
         // TODO: Put the flag itself in the CommandArguments as an already parsed arg?
     }
 

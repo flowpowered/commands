@@ -172,6 +172,10 @@ public class CommandArguments {
         return TCollections.unmodifiableList(paddings);
     }
 
+    protected static TIntList getPaddings(CommandArguments args) {
+        return args.getPaddings();
+    }
+
     /**
      * @param begin - from which arg, inclusive
      * @param end - to which arg, exclusive
@@ -397,7 +401,7 @@ public class CommandArguments {
             this.parsedArgs.put(argName, parsedValue);
         }
 
-        String valueOverride = this.argOverrides.get(argName); // Add to parsed command string
+        String valueOverride = getOverride(argName); // Add to parsed command string
         this.commandString.append(' ');
 
         if (valueOverride != null) {
@@ -457,8 +461,8 @@ public class CommandArguments {
     }
 
     public String currentArgument(String argName, boolean ignoreUnclosedQuote, boolean unescape) throws InvalidArgumentException {
-        if (argName != null && this.argOverrides.containsKey(argName)) {
-            return this.argOverrides.get(argName);
+        if (argName != null && hasOverride(argName)) {
+            return getOverride(argName);
         }
 
         if (this.index >= this.args.size()) {
@@ -819,6 +823,10 @@ public class CommandArguments {
 
     public boolean hasOverride(String key) {
         return this.argOverrides.containsKey(key);
+    }
+
+    public String getOverride(String key) {
+        return this.argOverrides.get(key);
     }
 
     public String getString(String key) {
