@@ -147,6 +147,19 @@ public class CommandArguments {
         return this.index < this.args.size();
     }
 
+    /**
+     * Returns whether calling {@link #currentArgument(String) currentArgument(argName)} would have any argument to return.
+     * <p>
+     * Returns true when there's some more unparsed arguments, or the argument with specified name is overriden.
+     * If it returns false then calling {@link #currentArgument(String)} with the same argName would result in an exception due to argument not being present.
+     * 
+     * @param argName
+     * @return
+     */
+    public boolean hasNext(String argName) {
+        return hasMore() || hasOverride(argName);
+    }
+
     public int remaining() {
         return this.args.size() - this.index;
     }
@@ -168,7 +181,9 @@ public class CommandArguments {
         List<String> newArgs = new ArrayList<>(this.args.subList(begin, end));
         TIntList newPaddings = new TIntArrayList(this.paddings.subList(begin, end));
         int offset = absoluteArgumentToOffset(new Vector2i(begin, 0));
-        newPaddings.set(0, offset);
+        if (newPaddings.size() > 0) {
+            newPaddings.set(0, offset);
+        }
         Pair<String, Integer> newUnclosedQuote = null;
         if (unclosedQuote != null) {
             newUnclosedQuote = new ImmutablePair<>(unclosedQuote.getLeft(), unclosedQuote.getRight());
@@ -215,7 +230,7 @@ public class CommandArguments {
         for (i = 0; i < pos.getX(); ++i) {
             length += args.get(i).length() + sepLength * (paddings.get(i) + 1);
         }
-        length += paddings.get(i) + pos.getY();
+        length += (i < paddings.size() ? paddings.get(i) : 0) + pos.getY();
         return length;
     }
 

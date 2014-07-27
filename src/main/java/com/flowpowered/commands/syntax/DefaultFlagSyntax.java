@@ -58,6 +58,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 return;
             }
             parseFlagArgs(args, name, curArgName, flag.getLeft(), flag.getRight());
+            ++i;
         }
 
     }
@@ -118,7 +119,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 } else {
                     // It MIGHT be the flag's args.
                     parseFlagArgs(args, name, curArgName, flag.getLeft(), flag.getRight(), true);
-                    if (flag.getRight().getArgs().remaining() <= argPos.getX()) {
+                    if (flag.getRight().getArgs().remaining() >= argPos.getX()) {
                         // It IS flag's args.
                         int result = flag.getRight().complete(command, sender, args, flags, cursor, candidates);
                         if (result > -2) {
@@ -134,7 +135,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 // It's us!
                 return completeFlag(flags, args, name, curArgName, argPos, candidates);
             }
-
+            ++i;
         }
         // End of args
         // How exactly did we end up here?
@@ -186,7 +187,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
         while (argNum < flag.getMaxArgs() && args.hasMore()) {
             String curFlagArgName = curArgName + ":" + argNum;
             String current = args.currentArgument(curFlagArgName, completing);
-            if (LONG_FLAG_REGEX.matcher(current).matches() || SHORT_FLAG_REGEX.matcher(current).matches()) {
+            if (LONG_FLAG_REGEX.matcher(current).matches() || SHORT_FLAG_REGEX.matcher(current).matches()) { // FIXME: This also matches negative numbers, even if they're not registered flags.
                 // It's next flag!
                 // TODO: Also match "--" as end of flags.
                 break;
