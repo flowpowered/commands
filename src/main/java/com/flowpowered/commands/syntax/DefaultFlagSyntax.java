@@ -50,6 +50,19 @@ import com.flowpowered.commands.PositionallyOverridableCommandArguments;
 public class DefaultFlagSyntax implements FlagSyntax {
     public static final Pattern LONG_FLAG_REGEX = Pattern.compile("^--(?<key>[\\w][\\w-]*)$");
     public static final Pattern SHORT_FLAG_REGEX = Pattern.compile("^-(?<key>[\\w]+)$");
+    public static final Pattern END_OF_FLAG_ARGS = Pattern.compile("^--");
+    public static final String REGEX_GROUP_NAME = "key";
+
+    private final boolean useEndOfFlags, useEndOfFlagArgs;
+
+    /**
+     * @param useEndOfFlags whether "--" should be parsed as end of flags mark, and
+     * @param useEndOfFlagArgs whether anything starting with "--" should be treated as end of flag's arguments and not part of them, even when it's not a valid long flag.
+     */
+    public DefaultFlagSyntax(boolean useEndOfFlags, boolean useEndOfFlagArgs) {
+        this.useEndOfFlags = useEndOfFlags;
+        this.useEndOfFlagArgs = useEndOfFlagArgs;
+    }
 
     @Override
     public void parse(CommandFlags flags, CommandArguments args, String name) throws InvalidArgumentException {
@@ -60,7 +73,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
             if (flag == null) {
                 return;
             }
-            parseFlagArgs(args, name, curArgName, flag.getLeft(), flag.getRight());
+            parseFlagArgs(args, flags, name, curArgName, flag.getLeft(), flag.getRight());
             ++i;
         }
 
@@ -72,7 +85,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
         Matcher lMatcher = LONG_FLAG_REGEX.matcher(current);
         Matcher sMatcher = SHORT_FLAG_REGEX.matcher(current);
         if (lMatcher.matches()) {
-            String flagName = lMatcher.group("key");
+            String flagName = lMatcher.group(REGEX_GROUP_NAME);
             Flag flag = flags.getLongFlag(flagName);
             if (flag == null) {
                 return null;
@@ -81,7 +94,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
             flagWithArgs = new ImmutablePair<>(flagName, flag);
             flag.setPresent(true);
         } else if (sMatcher.matches()) {
-            String key = sMatcher.group("key");
+            String key = sMatcher.group(REGEX_GROUP_NAME);
             TCharList chars = TCharArrayList.wrap(key.toCharArray());
             TCharIterator it = chars.iterator();
             char flagName = 0;
@@ -101,6 +114,9 @@ public class DefaultFlagSyntax implements FlagSyntax {
             args.success(curArgName, current);
             flagWithArgs = new ImmutablePair<>(String.valueOf(flagName), flag);
         } else {
+            if (useEndOfFlags && END_OF_FLAG_ARGS.matcher(current).matches()) {
+                args.success(curArgName, current);
+            }
             return null;
         }
         return flagWithArgs;
@@ -118,10 +134,10 @@ public class DefaultFlagSyntax implements FlagSyntax {
                     return -2; // End of flags
                 }
                 if (argPos.getX() > flag.getRight().getMaxArgs()) {
-                    parseFlagArgs(args, name, curArgName, flag.getLeft(), flag.getRight());
+                    parseFlagArgs(args, flags, name, curArgName, flag.getLeft(), flag.getRight());
                 } else {
                     // It MIGHT be the flag's args.
-                    parseFlagArgs(args, name, curArgName, flag.getLeft(), flag.getRight(), true);
+                    parseFlagArgs(args, flags, name, curArgName, flag.getLeft(), flag.getRight(), true);
                     if (flag.getRight().getArgs().remaining() >= argPos.getX()) {
                         // It IS flag's args.
                         int result = flag.getRight().complete(command, sender, args, flags, cursor, candidates);
@@ -150,7 +166,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
         String current = args.currentArgument(curArgName, true);
         Matcher sMatcher = SHORT_FLAG_REGEX.matcher(current);
         if (sMatcher.matches()) {
-            String key = sMatcher.group("key");
+            String key = sMatcher.group(REGEX_GROUP_NAME);
             // TODO: Maybe make sure the previous short flags make sense?
             Flag f = flags.getFlag(key.charAt(key.length() - 1)); // the last flag
             if (f == null) {
@@ -180,20 +196,24 @@ public class DefaultFlagSyntax implements FlagSyntax {
         }
     }
 
-    protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag) throws InvalidArgumentException {
-        parseFlagArgs(args, name, curArgName, flagName, flag, false);
+    protected void parseFlagArgs(CommandArguments args, CommandFlags flags, String name, String curArgName, String flagName, Flag flag) throws InvalidArgumentException {
+        parseFlagArgs(args, flags, name, curArgName, flagName, flag, false);
     }
 
-    protected void parseFlagArgs(CommandArguments args, String name, String curArgName, String flagName, Flag flag, boolean completing) throws InvalidArgumentException {
+    protected void parseFlagArgs(CommandArguments args, CommandFlags flags, String name, String curArgName, String flagName, Flag flag, boolean completing) throws InvalidArgumentException {
         int begin = args.getIndex();
         TIntObjectMap<String> overrides = new TIntObjectHashMap<String>();
         int argNum = 0;
         while (argNum < flag.getMaxArgs() && args.hasMore()) {
             String curFlagArgName = curArgName + ":" + argNum;
             String current = args.currentArgument(curFlagArgName, completing);
-            if (LONG_FLAG_REGEX.matcher(current).matches() || SHORT_FLAG_REGEX.matcher(current).matches()) { // FIXME: This also matches negative numbers, even if they're not registered flags.
+            Matcher lMatcher = LONG_FLAG_REGEX.matcher(current);
+            Matcher sMatcher = SHORT_FLAG_REGEX.matcher(current);
+            Matcher eMatcher = END_OF_FLAG_ARGS.matcher(current);
+            if ((useEndOfFlags && eMatcher.matches()) || (useEndOfFlagArgs && eMatcher.find())
+                    || (lMatcher.matches() && flags.hasFlag(lMatcher.group(REGEX_GROUP_NAME)))
+                    || (sMatcher.matches() && flags.hasFlag(sMatcher.group(REGEX_GROUP_NAME).charAt(0)))) {
                 // It's next flag!
-                // TODO: Also match "--" as end of flags.
                 break;
             }
             if (args.hasOverride(curFlagArgName)) {
@@ -210,5 +230,5 @@ public class DefaultFlagSyntax implements FlagSyntax {
         // TODO: Put the flag itself in the CommandArguments as an already parsed arg?
     }
 
-    public static final DefaultFlagSyntax INSTANCE = new DefaultFlagSyntax();
+    public static final DefaultFlagSyntax INSTANCE = new DefaultFlagSyntax(true, false);
 }
