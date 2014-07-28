@@ -762,13 +762,13 @@ public class CommandArguments {
      * @return string from specified arg on
      */
     public String popRemainingStrings(String argName) throws InvalidArgumentException {
-        if (!hasMore()) {
-            failure(argName, "No arguments present", true);
-        }
-        StringBuilder builder = new StringBuilder();
         if (hasOverride(argName)) {
             return success(argName, currentArgument(argName));
         }
+        if (!hasMore()) {
+            throw failure(argName, "No arguments present", true);
+        }
+        StringBuilder builder = new StringBuilder();
         while (hasMore()) {
             for (int i = 0; i < paddings.get(index); ++i) {
                 builder.append(separator);
@@ -780,7 +780,11 @@ public class CommandArguments {
             }
         }
         String ret = builder.toString();
-        assertCompletelyParsed(); // If not, there's a bug
+        try {
+            assertCompletelyParsed(); // If not, there's a bug
+        } catch (InvalidArgumentException e) {
+            throw new IllegalStateException("Doesn't have more but still not completely parsed.", e); // If it's a bug, don't blame the user - don't throw a UserFriendlyCommandException
+        }
         return success(argName, ret);
     }
 
