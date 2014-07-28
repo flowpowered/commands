@@ -198,16 +198,16 @@ public class DefaultFlagSyntax implements FlagSyntax {
             String key = sMatcher.group(REGEX_GROUP_NAME);
             // TODO: Maybe make sure the previous short flags make sense?
             Flag f = flags.getFlag(key.charAt(key.length() - 1)); // the last flag
-            if (f == null) {
-                return -1; // TODO: -2 maybe ?
+            if (f == null && shortFlagStrictness != StrictnessMode.SKIP) {
+                return -1; // In case you wonder: no, it's not -2, because it's us that were hit by the cursor, not the next arg.
             }
             TreeSet<String> potentialCandidates = new TreeSet<>();
-            if (f.getMinArgs() <= 0) {  // TODO: Does a negative value mean anything?
+            if (f == null || f.getMinArgs() <= 0) {  // TODO: Does a negative value mean anything?
                 for (char c : flags.getShortFlags().keys()) {
                     potentialCandidates.add(String.valueOf(c));
                 }
             }
-            if (f.getMaxArgs() > 0) {
+            if (f != null && f.getMaxArgs() > 0) {
                 potentialCandidates.add(""); // We can as well move on to the next argument now.
             }
             // TODO: Maybe don't add space after short flag completion?
