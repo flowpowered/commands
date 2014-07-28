@@ -27,12 +27,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.flowpowered.commands.InvalidArgumentException;
 import com.flowpowered.commands.Command;
 import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandFlags;
 import com.flowpowered.commands.CommandFlags.Flag;
 import com.flowpowered.commands.CommandSender;
+import com.flowpowered.commands.InvalidArgumentException;
 
 public class SpoutFlagSyntax implements FlagSyntax {
     public static final Pattern FLAG_REGEX = Pattern.compile("^-(?<key>-?[\\w]+)(?:=(?<value>.*))?$");
@@ -70,7 +70,8 @@ public class SpoutFlagSyntax implements FlagSyntax {
 
     @Override
     public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws InvalidArgumentException {
-        // TODO Auto-generated method stub
+        // Feel free to implement this if you care.
+        // And if you found some common logic in implementation of this method and DefaultFlagSyntax.complete, and managed to refactor it out of there, that would be more than awesome.
         return -1;
     }
 
