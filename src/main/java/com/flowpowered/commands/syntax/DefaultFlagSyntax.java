@@ -54,14 +54,19 @@ public class DefaultFlagSyntax implements FlagSyntax {
     public static final String REGEX_GROUP_NAME = "key";
 
     private final boolean useEndOfFlags, useEndOfFlagArgs;
+    private final StrictnessMode longFlagStrictness, shortFlagStrictness;
 
     /**
-     * @param useEndOfFlags whether "--" should be parsed as end of flags mark, and
-     * @param useEndOfFlagArgs whether anything starting with "--" should be treated as end of flag's arguments and not part of them, even when it's not a valid long flag.
+     * @param useEndOfFlags            whether "--" should be parsed as end of flags mark, and
+     * @param useEndOfFlagArgs         whether anything starting with "--" should be treated as end of flag's arguments and not part of them, even when it's not a valid long flag.
+     * @param unknownLongFlagBehavior  action to be taken when an unknown long flag is encountered
+     * @param unknownShortFlagBehavior action to be taken when an unknown short flag is encountered
      */
-    public DefaultFlagSyntax(boolean useEndOfFlags, boolean useEndOfFlagArgs) {
+    public DefaultFlagSyntax(boolean useEndOfFlags, boolean useEndOfFlagArgs, StrictnessMode unknownLongFlagBehavior, StrictnessMode unknownShortFlagBehavior) {
         this.useEndOfFlags = useEndOfFlags;
         this.useEndOfFlagArgs = useEndOfFlagArgs;
+        this.longFlagStrictness = unknownLongFlagBehavior;
+        this.shortFlagStrictness = unknownShortFlagBehavior;
     }
 
     @Override
@@ -73,7 +78,9 @@ public class DefaultFlagSyntax implements FlagSyntax {
             if (flag == null) {
                 return;
             }
-            parseFlagArgs(args, flags, name, curArgName, flag.getLeft(), flag.getRight());
+            if (flag.getRight() != null) { // Otherwise we're skipping an unknown flag due to StrictessMode.SKIP
+                parseFlagArgs(args, flags, name, curArgName, flag.getLeft(), flag.getRight());
+            }
             ++i;
         }
 
@@ -88,7 +95,15 @@ public class DefaultFlagSyntax implements FlagSyntax {
             String flagName = lMatcher.group(REGEX_GROUP_NAME);
             Flag flag = flags.getLongFlag(flagName);
             if (flag == null) {
-                return null;
+                switch (longFlagStrictness) {
+                    case SKIP:
+                        args.success(curArgName, current);
+                        return new ImmutablePair<>(flagName, null);
+                    case STOP:
+                        return null;
+                    case THROW:
+                        throw args.failure(name, "Unknown long flag: " + flagName, false);
+                }
             }
             args.success(curArgName, current);
             flagWithArgs = new ImmutablePair<>(flagName, flag);
@@ -98,21 +113,30 @@ public class DefaultFlagSyntax implements FlagSyntax {
             TCharList chars = TCharArrayList.wrap(key.toCharArray());
             TCharIterator it = chars.iterator();
             char flagName = 0;
-            Flag flag = null;
+            Flag lastFlag = null;
             while (it.hasNext()) {
                 flagName = it.next();
-                flag = flags.getFlag(flagName);
+                Flag flag = flags.getFlag(flagName);
                 if (flag == null) {
-                    // TODO: Throw sth? or maybe continue parsing other flags?
-                    return null;
+                    // TODO: Add more modes for short flags, like skip if not first in word
+                    switch (shortFlagStrictness) {
+                        case SKIP:
+                            continue;
+                        case STOP:
+                            // FIXME: Sets the previous short flags in the word as present, but doesn't call args.success(). Is that right?
+                            return null;
+                        case THROW:
+                            throw args.failure(name, "Unknown short flag: " + flagName, false);
+                    }
                 }
                 if (it.hasNext() && flag.getMinArgs() != 0) {
                     throw args.failure(name, "Flag " + flagName + " requires " + flag.getMinArgs() + " arguments, but none were present.", false);
                 }
                 flag.setPresent(true);
+                lastFlag = flag;
             }
             args.success(curArgName, current);
-            flagWithArgs = new ImmutablePair<>(String.valueOf(flagName), flag);
+            flagWithArgs = new ImmutablePair<>(String.valueOf(flagName), lastFlag);
         } else {
             if (useEndOfFlags && END_OF_FLAG_ARGS.matcher(current).matches()) {
                 args.success(curArgName, current);
@@ -132,6 +156,11 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 Pair<String, Flag> flag = parseFlag(flags, args, name, curArgName);
                 if (flag == null) {
                     return -2; // End of flags
+                }
+                if (flag.getRight() == null) {
+                    // We're skipping an unknown flag due to StrictessMode.SKIP
+                    ++i;
+                    continue;
                 }
                 if (argPos.getX() > flag.getRight().getMaxArgs()) {
                     parseFlagArgs(args, flags, name, curArgName, flag.getLeft(), flag.getRight());
@@ -183,6 +212,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
             }
             // TODO: Maybe don't add space after short flag completion?
             args.complete(curArgName, argPos, potentialCandidates, argPos.getY(), candidates);
+            // TODO: Return the result of the above line
             return args.argumentToOffset(argPos); // No part of the candidates overlaps what is already typed, so complete relatively to the cursor.
         } else {
             TreeSet<String> potentialCandidates = new TreeSet<>();
@@ -230,5 +260,23 @@ public class DefaultFlagSyntax implements FlagSyntax {
         // TODO: Put the flag itself in the CommandArguments as an already parsed arg?
     }
 
-    public static final DefaultFlagSyntax INSTANCE = new DefaultFlagSyntax(true, false);
+    /**
+     * Action that should be taken when an unknown flag is encountered.
+     */
+    public static enum StrictnessMode {
+        /**
+         * Causes the syntax to skip (a.k.a. ignore) the unknown flag and continue parsing further flags.
+         */
+        SKIP,
+        /**
+         * Causes the syntax to stop parsing further flags, and behave like the flags end just before the unknown flag.
+         */
+        STOP,
+        /**
+         * Causes the syntax to throw an exception produced by {@link CommandArguments#failure(String, String, boolean)}.
+         */
+        THROW
+    }
+
+    public static final DefaultFlagSyntax INSTANCE = new DefaultFlagSyntax(true, false, StrictnessMode.STOP, StrictnessMode.STOP);
 }
