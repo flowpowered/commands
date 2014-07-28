@@ -61,6 +61,9 @@ public class CommandFlags {
         private FlagArgCompleter completer;
 
         public Flag(String[] longNames, char[] shortNames, int minArgs, int maxArgs) {
+            if (minArgs < 0) {
+                throw new IllegalArgumentException("minArgs < 0");
+            }
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
             this.longNames = new HashSet<>();
@@ -69,6 +72,9 @@ public class CommandFlags {
         }
 
         public Flag(Collection<String> longNames, TCharCollection shortNames, int minArgs, int maxArgs) {
+            if (minArgs < 0) {
+                throw new IllegalArgumentException("minArgs < 0");
+            }
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
             this.longNames = new HashSet<>(longNames);

@@ -202,7 +202,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 return -1; // In case you wonder: no, it's not -2, because it's us that were hit by the cursor, not the next arg.
             }
             TreeSet<String> potentialCandidates = new TreeSet<>();
-            if (f == null || f.getMinArgs() <= 0) {  // TODO: Does a negative value mean anything?
+            if (f == null || f.getMinArgs() == 0) {
                 for (char c : flags.getShortFlags().keys()) {
                     potentialCandidates.add(String.valueOf(c));
                 }
