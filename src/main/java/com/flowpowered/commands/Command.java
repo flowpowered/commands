@@ -199,7 +199,7 @@ public class Command implements Named {
                 return false; // Something further than next arg should be completed, find the child as usual and call us again.
             }
             String key = CommandArguments.SUBCOMMAND_ARGNAME + args.getDepth();
-            if (args.hasOverride(key)) { // TODO: Remove this after it's added to CommandArguments.complete()
+            if (args.hasOverride(key)) {
                 return false; // We have override for next subcommand name, so that's not what we're completing.
             }
             TreeSet<String> children = new TreeSet<>(command.getChildren().keySet());

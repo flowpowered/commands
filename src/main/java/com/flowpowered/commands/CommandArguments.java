@@ -242,22 +242,31 @@ public class CommandArguments {
         return absoluteArgumentToOffset(pos.add(index, 0));
     }
 
-    public int complete(String argName, int cursor, SortedSet<String> potentialCandidates, List<String> candidates) throws InvalidArgumentException {
+    public int complete(String argName, int cursor, SortedSet<String> potentialCandidates, List<String> candidates) {
         return complete(argName, offsetToArgument(cursor), potentialCandidates, candidates);
     }
 
-    public int complete(String argName, int argNumber, int offset, SortedSet<String> potentialCandidates, List<String> candidates) throws InvalidArgumentException {
+    public int complete(String argName, int argNumber, int offset, SortedSet<String> potentialCandidates, List<String> candidates) {
         return complete(argName, new Vector2i(argNumber, offset), potentialCandidates, candidates);
     }
 
-    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) throws InvalidArgumentException {
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) {
         return complete(argName, position, potentialCandidates, 0, candidates);
     }
 
-    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, List<String> candidates) throws InvalidArgumentException { // TODO: Don't throw this
-        // TODO: Return -2 when the arg is overriden
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, List<String> candidates) {
         // TODO: Add an option to ignore case
-        String rawStart = currentArgument(argName, true, false).substring(potentialCandidatesOffset, Math.max(potentialCandidatesOffset, position.getY()));
+        if (hasOverride(argName)) { // Don't call us like that.
+            // Is this too harsh? Maybe, but I guess overrides will be used very rarely, and many devs will probably never encounter them.
+            // So if their clients encounter this situation, we'd better produce some meaningful and descriptive error, instead of silently "return -1 no completion for you".
+            throw new IllegalStateException(error(argName, "The caller didn't check that the argument is overriden."));
+        }
+        String rawStart;
+        try {
+            rawStart = currentArgument(argName, true, false).substring(potentialCandidatesOffset, Math.max(potentialCandidatesOffset, position.getY()));
+        } catch (InvalidArgumentException e) {
+            throw new IllegalArgumentException("Position " + position + " (cursor " + argumentToOffset(position) + ") is outside of args.", e); // Because whet else could it be?
+        }
         String start = unescape(rawStart);
         SortedSet<String> matches = potentialCandidates.tailSet(start);
         String unclosedQuote = getReachedUnclosedQuote();
@@ -327,9 +336,7 @@ public class CommandArguments {
         return "";
     }
 
-    // TODO: Don't declare throws.
-    public int completeAndMerge(String argName, Vector2i position, SortedSet<String> potentialCandidates, int result2, List<String> candidates2, List<String> outCandidates)
-            throws InvalidArgumentException {
+    public int completeAndMerge(String argName, Vector2i position, SortedSet<String> potentialCandidates, int result2, List<String> candidates2, List<String> outCandidates) {
         List<String> candidates1 = new ArrayList<String>();
         int result1 = complete(argName, position, potentialCandidates, candidates1);
         return mergeCompletions(argName, result1, candidates1, result2, candidates2, outCandidates);
