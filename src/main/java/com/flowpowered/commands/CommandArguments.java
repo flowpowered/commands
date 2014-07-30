@@ -267,6 +267,10 @@ public class CommandArguments {
         } catch (InvalidArgumentException e) {
             throw new IllegalArgumentException("Position " + position + " (cursor " + argumentToOffset(position) + ") is outside of args.", e); // Because whet else could it be?
         }
+        return completeRaw(rawStart, position.add(index, 0), potentialCandidates, potentialCandidatesOffset, false, candidates);
+    }
+
+    public int completeRaw(String rawStart, Vector2i absolutePosition, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, boolean potentialCandidatesRaw, List<String> candidates) {
         String start = unescape(rawStart);
         SortedSet<String> matches = potentialCandidates.tailSet(start);
         String unclosedQuote = getReachedUnclosedQuote();
@@ -274,16 +278,20 @@ public class CommandArguments {
             if (!match.startsWith(start)) {
                 break;
             }
-            candidates.add(rawStart + escape(match.substring(start.length())) + unclosedQuote + getSeparator());
+            String subMatch = match.substring(start.length());
+            if (!potentialCandidatesRaw) {
+                subMatch = escape(subMatch);
+            }
+            candidates.add(rawStart + subMatch + unclosedQuote + getSeparator());
         }
         if (candidates.isEmpty()) {
             if (unclosedQuote == "") {
                 return -1;
             }
             candidates.add(unclosedQuote + getSeparator());
-            return argumentToOffset(position);
+            return absoluteArgumentToOffset(absolutePosition);
         }
-        return argumentToOffset(new Vector2i(position.getX(), potentialCandidatesOffset));
+        return absoluteArgumentToOffset(new Vector2i(absolutePosition.getX(), potentialCandidatesOffset));
     }
 
     public int mergeCompletions(String argName, int result1, List<String> candidates1, int result2, List<String> candidates2, List<String> outCandidates) {
@@ -468,7 +476,7 @@ public class CommandArguments {
     }
 
     public String currentArgument(String argName, boolean ignoreUnclosedQuote, boolean unescape) throws InvalidArgumentException {
-        if (argName != null && hasOverride(argName)) {
+        if (hasOverride(argName)) {
             return getOverride(argName);
         }
 
@@ -777,14 +785,7 @@ public class CommandArguments {
         }
         StringBuilder builder = new StringBuilder();
         while (hasMore()) {
-            for (int i = 0; i < paddings.get(index); ++i) {
-                builder.append(separator);
-            }
-            builder.append(currentArgument(argName, true));
-            advance();
-            if (hasMore()) {
-                builder.append(separator);
-            }
+            popRemainingStringSegment(argName, builder, true, false);
         }
         String ret = builder.toString();
         try {
@@ -800,6 +801,46 @@ public class CommandArguments {
             return popRemainingStrings(argName);
         } catch (InvalidArgumentException e) {
             return potentialDefault(e, def);
+        }
+    }
+
+    public int completeRemainingStrings(String argName, int cursor, SortedSet<String> potentialCandidates, List<String> candidates) {
+        return completeRemainingStrings(argName, cursor, potentialCandidates, 0, candidates);
+    }
+
+    public int completeRemainingStrings(String argName, int cursor, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, List<String> candidates) {
+        if (hasOverride(argName)) {
+            success(argName, getOverride(argName));
+        }
+        Vector2i pos = offsetToArgument(cursor);
+        int base = argumentToOffset(new Vector2i(0, 0));
+        if (pos.getX() >= remaining()) {
+            throw new IllegalArgumentException("Position " + pos + " (curosr " + cursor + ") is outside of args!");
+        }
+        StringBuilder builder = new StringBuilder();
+        try {
+            for (int i = 0; i < pos.getX(); ++i) {
+                popRemainingStringSegment(argName, builder, false, false);
+            }
+            popRemainingStringSegment(argName, builder, false, true);
+        } catch (InvalidArgumentException e) {
+            throw new IllegalStateException("We did the checks, but currentArgument threw something anyway", e);
+        }
+        String rawStart = builder.toString().substring(potentialCandidatesOffset, Math.max(potentialCandidatesOffset, cursor - base));
+        return completeRaw(rawStart, offsetToAbsoluteArgument(cursor), potentialCandidates, potentialCandidatesOffset, true, candidates);
+    }
+
+    protected void popRemainingStringSegment(String argName, StringBuilder builder, boolean unescape, boolean dontAdvance) throws InvalidArgumentException {
+        for (int i = 0; i < paddings.get(index); ++i) {
+            builder.append(separator);
+        }
+        builder.append(currentArgument(argName, true, unescape));
+        if (dontAdvance) {
+            return;
+        }
+        advance();
+        if (hasMore()) {
+            builder.append(separator);
         }
     }
 
@@ -833,7 +874,7 @@ public class CommandArguments {
     }
 
     public boolean hasOverride(String key) {
-        return this.argOverrides.containsKey(key);
+        return key != null && this.argOverrides.containsKey(key);
     }
 
     public String getOverride(String key) {
