@@ -28,14 +28,14 @@ import com.flowpowered.commands.exception.UserFriendlyCommandException;
 /**
  * Thrown when an invalid argument is encountered, either from there not being enough input data or invalid input data
  */
-public class InvalidArgumentException extends UserFriendlyCommandException implements CommandArgumentException {
+public class InvalidCommandArgumentException extends UserFriendlyCommandException implements CommandArgumentException {
     private static final long serialVersionUID = -6994880605421981769L;
     private final String command;
     private final String invalidArgName;
     private final String reason;
     private final boolean silenceable;
 
-    public InvalidArgumentException(String command, String invalidArgName, String reason, boolean silenceable) {
+    public InvalidCommandArgumentException(String command, String invalidArgName, String reason, boolean silenceable) {
         super("/" + command + " [" + invalidArgName + "] invalid: " + reason); // /command [invalidArg] invalid: reason
         this.command = command;
         this.invalidArgName = invalidArgName;

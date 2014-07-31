@@ -32,7 +32,7 @@ import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.flags.CommandFlags;
 import com.flowpowered.commands.flags.Flag;
 import com.flowpowered.commands.CommandSender;
-import com.flowpowered.commands.InvalidArgumentException;
+import com.flowpowered.commands.InvalidCommandArgumentException;
 
 public class SpoutFlagSyntax implements FlagSyntax {
     public static final Pattern FLAG_REGEX = Pattern.compile("^-(?<key>-?[\\w]+)(?:=(?<value>.*))?$");
@@ -45,7 +45,7 @@ public class SpoutFlagSyntax implements FlagSyntax {
     }
 
     @Override
-    public void parse(CommandFlags flags, CommandArguments args, String name) throws InvalidArgumentException {
+    public void parse(CommandFlags flags, CommandArguments args, String name) throws InvalidCommandArgumentException {
         int i = 0;
         while (args.hasMore()) {
             String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
@@ -69,7 +69,7 @@ public class SpoutFlagSyntax implements FlagSyntax {
     }
 
     @Override
-    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws InvalidArgumentException {
+    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws InvalidCommandArgumentException {
         // Feel free to implement this if you care.
         // And if you found some common logic in implementation of this method and DefaultFlagSyntax.complete, and managed to refactor it out of there, that would be more than awesome.
         return -1;
@@ -87,10 +87,10 @@ public class SpoutFlagSyntax implements FlagSyntax {
      * @param it The iterator to source values from
      * @param name The name of the argument
      * @param value A predefined argument, for the first type of flag (shown above)
-     * @throws InvalidArgumentException when an invalid flag is presented.
+     * @throws InvalidCommandArgumentException when an invalid flag is presented.
      */
 
-    protected void handleFlag(CommandFlags flags, CommandArguments args, String curArgName, String name, String value) throws InvalidArgumentException {
+    protected void handleFlag(CommandFlags flags, CommandArguments args, String curArgName, String name, String value) throws InvalidCommandArgumentException {
         Flag f = flags.getFlag(name);
         if (f == null && (value == null || !overrideArgs)) {
             throw args.failure(name, "Undefined flag presented", false);

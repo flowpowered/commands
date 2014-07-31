@@ -44,7 +44,7 @@ import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.flags.CommandFlags;
 import com.flowpowered.commands.flags.Flag;
 import com.flowpowered.commands.CommandSender;
-import com.flowpowered.commands.InvalidArgumentException;
+import com.flowpowered.commands.InvalidCommandArgumentException;
 import com.flowpowered.commands.PositionallyOverridableCommandArguments;
 
 public class DefaultFlagSyntax implements FlagSyntax {
@@ -70,7 +70,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
     }
 
     @Override
-    public void parse(CommandFlags flags, CommandArguments args, String name) throws InvalidArgumentException {
+    public void parse(CommandFlags flags, CommandArguments args, String name) throws InvalidCommandArgumentException {
         int i = 0;
         while (args.hasMore()) {
             String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
@@ -86,7 +86,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
 
     }
 
-    protected Pair<String, Flag> parseFlag(CommandFlags flags, CommandArguments args, String name, String curArgName) throws InvalidArgumentException {
+    protected Pair<String, Flag> parseFlag(CommandFlags flags, CommandArguments args, String name, String curArgName) throws InvalidCommandArgumentException {
         Pair<String, Flag> flagWithArgs;
         String current = args.currentArgument(curArgName);
         Matcher lMatcher = LONG_FLAG_REGEX.matcher(current);
@@ -147,7 +147,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
     }
 
     @Override
-    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws InvalidArgumentException {
+    public int complete(Command command, CommandSender sender, CommandFlags flags, CommandArguments args, String name, int cursor, List<String> candidates) throws InvalidCommandArgumentException {
         int i = 0;
         while (args.hasMore()) {
             String curArgName = CommandFlags.FLAG_ARGNAME + name + ":" + i;
@@ -190,7 +190,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
         throw new IllegalStateException(args.error(name, "WTF? Completion request at " + cursor + " is outside of args?"));
     }
 
-    protected int completeFlag(CommandFlags flags, CommandArguments args, String name, String curArgName, Vector2i argPos, List<String> candidates) throws InvalidArgumentException {
+    protected int completeFlag(CommandFlags flags, CommandArguments args, String name, String curArgName, Vector2i argPos, List<String> candidates) throws InvalidCommandArgumentException {
         flags.setCanCompleteNextArgToo(true); // Who knows, maybe it can also be a non-flag?
         String current = args.currentArgument(curArgName, true);
         Matcher sMatcher = SHORT_FLAG_REGEX.matcher(current);
@@ -224,11 +224,11 @@ public class DefaultFlagSyntax implements FlagSyntax {
         }
     }
 
-    protected void parseFlagArgs(CommandArguments args, CommandFlags flags, String name, String curArgName, String flagName, Flag flag) throws InvalidArgumentException {
+    protected void parseFlagArgs(CommandArguments args, CommandFlags flags, String name, String curArgName, String flagName, Flag flag) throws InvalidCommandArgumentException {
         parseFlagArgs(args, flags, name, curArgName, flagName, flag, false);
     }
 
-    protected void parseFlagArgs(CommandArguments args, CommandFlags flags, String name, String curArgName, String flagName, Flag flag, boolean completing) throws InvalidArgumentException {
+    protected void parseFlagArgs(CommandArguments args, CommandFlags flags, String name, String curArgName, String flagName, Flag flag, boolean completing) throws InvalidCommandArgumentException {
         int begin = args.getIndex();
         TIntObjectMap<String> overrides = new TIntObjectHashMap<String>();
         int argNum = 0;
