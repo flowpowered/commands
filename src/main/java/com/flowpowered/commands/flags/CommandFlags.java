@@ -180,27 +180,38 @@ public class CommandFlags {
     // Flag addition helpers
 
     public CommandFlags b(String... names) {
-        Flag flag = new Flag(names, new char[0], 0, 0);
-        this.add(flag);
-        return this;
+        return add(new Flag(names, new char[0], 0, 0));
     }
 
     public CommandFlags b(char... shortNames) {
-        Flag flag = new Flag(new String[0], shortNames, 0, 0);
-        this.add(flag);
-        return this;
+        return add(new Flag(new String[0], shortNames, 0, 0));
+    }
+
+    public CommandFlags b(String longName, char shortName) {
+        return add(new Flag(new String[] { longName }, new char[] { shortName }, 0, 0));
     }
 
     public CommandFlags v(String... names) {
-        Flag flag = new Flag(names, new char[0], 1, 1);
-        this.add(flag);
-        return this;
+        return add(new Flag(names, new char[0], 1, 1));
     }
 
     public CommandFlags v(char... shortNames) {
-        Flag flag = new Flag(new String[0], shortNames, 1, 1);
-        this.add(flag);
-        return this;
+        return add(new Flag(new String[0], shortNames, 1, 1));
     }
 
+    public CommandFlags v(String longName, char shortName) {
+        return add(new Flag(new String[] { longName }, new char[] { shortName }, 1, 1));
+    }
+
+    public CommandFlags f(int minArgs, int maxArgs, char... shortNames) {
+        return add(new Flag(new String[0], shortNames, minArgs, maxArgs));
+    }
+
+    public CommandFlags f(int minArgs, int maxArgs, String... names) {
+        return add(new Flag(names, new char[0], minArgs, maxArgs));
+    }
+
+    public CommandFlags f(int minArgs, int maxArgs, String longName, char shortName) {
+        return add(new Flag(new String[] { longName }, new char[] { shortName }, minArgs, maxArgs));
+    }
 }
