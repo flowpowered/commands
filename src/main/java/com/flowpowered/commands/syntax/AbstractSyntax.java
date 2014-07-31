@@ -30,6 +30,8 @@ import gnu.trove.list.TIntList;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.flowpowered.commands.syntax.flags.FlagSyntax;
+
 public abstract class AbstractSyntax implements Syntax {
 
     private final String separator;

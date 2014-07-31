@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.flowpowered.commands.syntax;
+package com.flowpowered.commands.syntax.flags;
 
 import java.util.List;
 import java.util.TreeSet;
@@ -41,8 +41,8 @@ import com.flowpowered.math.vector.Vector2i;
 
 import com.flowpowered.commands.Command;
 import com.flowpowered.commands.CommandArguments;
-import com.flowpowered.commands.CommandFlags;
-import com.flowpowered.commands.CommandFlags.Flag;
+import com.flowpowered.commands.flags.CommandFlags;
+import com.flowpowered.commands.flags.Flag;
 import com.flowpowered.commands.CommandSender;
 import com.flowpowered.commands.InvalidArgumentException;
 import com.flowpowered.commands.PositionallyOverridableCommandArguments;

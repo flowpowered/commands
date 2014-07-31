@@ -47,6 +47,7 @@ import com.flowpowered.math.vector.Vector3f;
 
 import com.flowpowered.commons.StringUtil;
 
+import com.flowpowered.commands.flags.CommandFlags;
 import com.flowpowered.commands.syntax.Syntax;
 
 /**

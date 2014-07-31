@@ -21,15 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.flowpowered.commands.syntax;
+package com.flowpowered.commands.syntax.flags;
 
 import java.util.List;
 
 import com.flowpowered.commands.InvalidArgumentException;
 import com.flowpowered.commands.Command;
 import com.flowpowered.commands.CommandArguments;
-import com.flowpowered.commands.CommandFlags;
 import com.flowpowered.commands.CommandSender;
+import com.flowpowered.commands.flags.CommandFlags;
 
 public interface FlagSyntax {
 

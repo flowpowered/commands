@@ -35,6 +35,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.flowpowered.commons.StringUtil;
 
+import com.flowpowered.commands.syntax.flags.FlagSyntax;
+import com.flowpowered.commands.syntax.flags.SpoutFlagSyntax;
+
 public class RegexSyntax extends AbstractSyntax {
     private final Pattern quoteStart, unescape, sepPattern, escapeMatch;
     private final String quoteEnd, escapeReplace;

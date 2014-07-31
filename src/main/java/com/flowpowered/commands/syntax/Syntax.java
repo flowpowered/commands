@@ -29,6 +29,8 @@ import gnu.trove.list.TIntList;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.flowpowered.commands.syntax.flags.FlagSyntax;
+
 public interface Syntax {
 
     Pair<String, Integer> splitNoEmpties(String input, List<String> output, TIntList paddings);

@@ -29,6 +29,9 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.flowpowered.commands.syntax.flags.DefaultFlagSyntax;
+import com.flowpowered.commands.syntax.flags.FlagSyntax;
+
 public class DefaultSyntax extends AbstractSyntax {
 
     public DefaultSyntax() {
