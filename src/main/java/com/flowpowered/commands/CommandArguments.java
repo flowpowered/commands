@@ -277,11 +277,21 @@ public class CommandArguments {
     }
 
     public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, List<String> candidates) {
-        return complete(argName, position, potentialCandidates, 0, candidates);
+        return complete(argName, position, potentialCandidates, 0, false, candidates);
     }
 
-    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, List<String> candidates) {
-        // TODO: Add an option to ignore case
+    /**
+     * 
+     * 
+     * @param argName
+     * @param position
+     * @param potentialCandidates
+     * @param potentialCandidatesOffset
+     * @param toLowerCase whether the part of argument before the completion cursor should be turned to lower case. If you use this, you probably want all potentialCandidates to be lowercase, too.
+     * @param candidates
+     * @return
+     */
+    public int complete(String argName, Vector2i position, SortedSet<String> potentialCandidates, int potentialCandidatesOffset, boolean toLowerCase, List<String> candidates) {
         if (hasOverride(argName)) { // Don't call us like that.
             // Is this too harsh? Maybe, but I guess overrides will be used very rarely, and many devs will probably never encounter them.
             // So if their clients encounter this situation, we'd better produce some meaningful and descriptive error, instead of silently "return -1 no completion for you".
@@ -292,6 +302,9 @@ public class CommandArguments {
             rawStart = currentArgument(argName, true, false).substring(potentialCandidatesOffset, Math.max(potentialCandidatesOffset, position.getY()));
         } catch (InvalidArgumentException e) {
             throw new IllegalArgumentException("Position " + position + " (cursor " + argumentToOffset(position) + ") is outside of args.", e); // Because whet else could it be?
+        }
+        if (toLowerCase) {
+            rawStart = rawStart.toLowerCase();
         }
         return completeRaw(rawStart, position.add(index, 0), potentialCandidates, potentialCandidatesOffset, false, candidates);
     }

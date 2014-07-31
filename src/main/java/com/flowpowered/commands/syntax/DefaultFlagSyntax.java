@@ -211,7 +211,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                 potentialCandidates.add(""); // We can as well move on to the next argument now.
             }
             // TODO: Maybe don't add space after short flag completion?
-            return args.complete(curArgName, argPos, potentialCandidates, argPos.getY(), candidates);
+            return args.complete(curArgName, argPos, potentialCandidates, argPos.getY(), false, candidates);
         } else {
             TreeSet<String> potentialCandidates = new TreeSet<>();
             for (String flagName : flags.getLongFlags().keySet()) {
