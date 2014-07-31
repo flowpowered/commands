@@ -10,6 +10,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
 
 import com.flowpowered.math.vector.Vector2i;
 
@@ -23,13 +24,17 @@ public class PositionallyOverridableCommandArguments extends CommandArguments {
         super(args, paddings, syntax, unclosedQuote);
     }
 
+    protected PositionallyOverridableCommandArguments(List<String> args, TIntList paddings, Syntax syntax, Pair<String, Integer> unclosedQuote, Logger logger) {
+        super(args, paddings, syntax, unclosedQuote, logger);
+    }
+
     public PositionallyOverridableCommandArguments(CommandArguments args, TIntObjectMap<String> overrides) {
         this(args);
         this.overrides.putAll(overrides);
     }
 
     public PositionallyOverridableCommandArguments(CommandArguments args) {
-        this(new ArrayList<>(args.getAll()), new TIntArrayList(getPaddings(args)), args.getSyntax(), copyUnclosedQuote(args.getUnclosedQuote()));
+        this(new ArrayList<>(args.getAll()), new TIntArrayList(getPaddings(args)), args.getSyntax(), copyUnclosedQuote(args.getUnclosedQuote()), args.getLogger());
     }
 
     @Override
@@ -74,7 +79,7 @@ public class PositionallyOverridableCommandArguments extends CommandArguments {
         if (unclosedQuote != null) {
             newUnclosedQuote = new ImmutablePair<>(unclosedQuote.getLeft(), unclosedQuote.getRight());
         }
-        return new PositionallyOverridableCommandArguments(newArgs, newPaddings, getSyntax(), newUnclosedQuote);
+        return new PositionallyOverridableCommandArguments(newArgs, newPaddings, getSyntax(), newUnclosedQuote, getLogger());
     }
 
     @Override

@@ -40,6 +40,7 @@ import gnu.trove.list.array.TIntArrayList;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
@@ -57,6 +58,7 @@ import com.flowpowered.commands.syntax.Syntax;
  */
 public class CommandArguments {
     public static final String SUBCOMMAND_ARGNAME = "subcommand:";
+    protected static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(CommandArguments.class);
 
     private final StringBuilder commandString = new StringBuilder();
     private final Map<String, Object> parsedArgs = new HashMap<String, Object>();
@@ -69,21 +71,35 @@ public class CommandArguments {
     private final boolean allUnescaped;
     private final String separator;
     private final Syntax syntax;
+    private final Logger logger;
 
     public CommandArguments(List<String> args) {
+        this(args, DEFAULT_LOGGER);
+    }
+
+    public CommandArguments(List<String> args, Logger logger) {
         this.args = new ArrayList<String>(args);
         this.unclosedQuote = null;
         this.allUnescaped = true;
         this.separator = " ";
         this.syntax = null; // TODO: sure?
         this.paddings = null;
+        this.logger = logger;
     }
 
     public CommandArguments(String... args) {
         this(Arrays.asList(args));
     }
 
+    public CommandArguments(Logger logger, String... args) {
+        this(Arrays.asList(args), logger);
+    }
+
     public CommandArguments(String args, Syntax syntax) {
+        this(args, syntax, DEFAULT_LOGGER);
+    }
+
+    public CommandArguments(String args, Syntax syntax, Logger logger) {
         List<String> split = new ArrayList<>();
         this.paddings = new TIntArrayList();
         this.unclosedQuote = syntax.splitNoEmpties(args, split, paddings);  // modifies the lists
@@ -92,9 +108,14 @@ public class CommandArguments {
         this.allUnescaped = false;
         this.syntax = syntax;
         this.separator = syntax.getSeparator();
+        this.logger = logger;
     }
 
     protected CommandArguments(List<String> args, TIntList paddings, Syntax syntax, Pair<String, Integer> unclosedQuote) {
+        this(args, paddings, syntax, unclosedQuote, DEFAULT_LOGGER);
+    }
+
+    protected CommandArguments(List<String> args, TIntList paddings, Syntax syntax, Pair<String, Integer> unclosedQuote, Logger logger) {
         this.paddings = paddings;
         this.unclosedQuote = unclosedQuote;
         this.args = args;
@@ -102,6 +123,7 @@ public class CommandArguments {
         this.allUnescaped = false;
         this.syntax = syntax;
         this.separator = syntax.getSeparator();
+        this.logger = logger;
     }
 
     /**
@@ -136,6 +158,10 @@ public class CommandArguments {
 
     public Syntax getSyntax() {
         return this.syntax;
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 
     /**
@@ -192,7 +218,7 @@ public class CommandArguments {
         if (unclosedQuote != null) {
             newUnclosedQuote = new ImmutablePair<>(unclosedQuote.getLeft(), unclosedQuote.getRight());
         }
-        return new CommandArguments(newArgs, newPaddings, syntax, newUnclosedQuote);
+        return new CommandArguments(newArgs, newPaddings, syntax, newUnclosedQuote, logger);
     }
 
     public Pair<String, Integer> getUnclosedQuote() {

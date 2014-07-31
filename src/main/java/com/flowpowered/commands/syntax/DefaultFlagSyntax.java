@@ -175,7 +175,7 @@ public class DefaultFlagSyntax implements FlagSyntax {
                         }
                         // Or, if it returned -2, they're stupid, because the cursor was in their args.
                         // But some other syntax might want them to return -2 in some cases, so we can't blame them.
-                        // TODO: Log this?
+                        args.getLogger().warn("Flag completer " + flag.getRight().getCompleter() + " returned -2 for flag " + flag.getLeft());
                         return -1;
                     }
                 }

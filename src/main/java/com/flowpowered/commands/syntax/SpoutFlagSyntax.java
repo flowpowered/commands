@@ -108,7 +108,7 @@ public class SpoutFlagSyntax implements FlagSyntax {
                 args.success(name, value, true);
             }
             if (f != null) {
-                f.setArgs(new CommandArguments(value));
+                f.setArgs(new CommandArguments(args.getLogger(), value));
             }
         } else if (f.getMinArgs() > 1) {
             throw new IllegalStateException("Tried to parse a multi-argument flag with SpoutFlagSyntax");
@@ -122,7 +122,7 @@ public class SpoutFlagSyntax implements FlagSyntax {
                 args.setArgOverride(name, value);
                 args.success(name, value, true);
             }
-            f.setArgs(new CommandArguments(value));
+            f.setArgs(new CommandArguments(args.getLogger(), value));
             args.success(curArgName, value);
         } else {
             if (overrideArgs) {
