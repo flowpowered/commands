@@ -566,8 +566,10 @@ public class CommandArguments {
      * @throws InvalidArgumentException when unparsed arguments are present.
      */
     public void assertCompletelyParsed() throws InvalidArgumentException {
-        // TODO: Maybe ignore the last arg if it's empty?
         if (this.index < this.args.size()) {
+            if (index == args.size() - 1 && args.get(index).isEmpty()) {
+                return;
+            }
             throw failure("...", "Too many arguments are present!", false);
         }
     }
