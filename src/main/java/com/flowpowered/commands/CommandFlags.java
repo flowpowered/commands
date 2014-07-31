@@ -159,7 +159,7 @@ public class CommandFlags {
         return add(Arrays.asList(flags));
     }
 
-    public CommandFlags add(List<Flag> flags) {
+    public CommandFlags add(Collection<Flag> flags) {
         for (Flag f : flags) {
             for (String name : f.getLongNames()) {
                 this.longFlags.put(name, f);
@@ -172,7 +172,12 @@ public class CommandFlags {
         return this;
     }
 
-    // TODO: Add a way to sum/combine two sets of flags
+    public void addAll(CommandFlags flags) {
+        Set<Flag> uniqueFlags = new HashSet<>();
+        uniqueFlags.addAll(flags.getLongFlags().values());
+        uniqueFlags.addAll(flags.getShortFlags().valueCollection());
+        add(uniqueFlags);
+    }
 
     protected FlagSyntax findSyntax(CommandArguments args) {
         FlagSyntax syntax = this.syntax;
