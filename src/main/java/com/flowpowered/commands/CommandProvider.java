@@ -1,5 +1,5 @@
 /*
- * This file is part of Flow Chat and Commands, licensed under the MIT License (MIT).
+ * This file is part of Flow Commands, licensed under the MIT License (MIT).
  *
  * Copyright (c) 2013 Spout LLC <http://www.spout.org/>
  *
