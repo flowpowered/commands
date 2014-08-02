@@ -49,6 +49,7 @@ import com.flowpowered.commons.StringUtil;
 
 import com.flowpowered.commands.flags.CommandFlags;
 import com.flowpowered.commands.syntax.Syntax;
+import com.flowpowered.commands.util.RelativeVector3f;
 
 /**
  * This class is used as a wrapper for command arguments to make them easily
@@ -710,40 +711,78 @@ public class CommandArguments {
         return flags.complete(command, sender, this, argName, cursor, candidates);
     }
 
+    public RelativeVector3f popVector3(String argName) throws InvalidCommandArgumentException {
+        return popRelativeVector3(argName, Vector3f.ZERO);
+    }
+
     /**
      * Pop a {@link Vector3f}.
      * Accepts either x y z or x,y,z syntax
-     * TODO support relative syntax
      *
      * @param argName The name of the argument
      * @return A parsed vector
      * @throws InvalidCommandArgumentException if not enough coordinates are provided or the coordinates are not floats
      */
-    public Vector3f popVector3(String argName) throws InvalidCommandArgumentException {
+    public RelativeVector3f popRelativeVector3(String argName, Vector3f refPoint) throws InvalidCommandArgumentException {
         try {
-            float x, y, z;
+            String[] els;
             if (currentArgument(argName).contains(",")) {
-                String[] els = currentArgument(argName).split(",");
+                els = currentArgument(argName).split(",");
                 if (els.length < 3) {
                     throw failure(argName, "Must provide 3 coordinates", false);
                 }
-                x = Float.parseFloat(els[0]);
-                y = Float.parseFloat(els[1]);
-                z = Float.parseFloat(els[2]);
             } else {
-                x = popFloat(null);
-                y = popFloat(null);
-                z = popFloat(null);
+                els = new String[3];
+                els[0] = popString(null);
+                els[1] = popString(null);
+                els[2] = popString(null);
             }
-            return success(argName, new Vector3f(x, y, z));
+            @SuppressWarnings("unchecked")
+            Pair<Float, Boolean>[] pairs = new Pair[3];
+            for (int i = 0; i < 3; ++i) {
+                try {
+                    pairs[i] = parseRelativeFloat(els[i]);
+                } catch (NumberFormatException e) {
+                    throw failure(argName, "Input '" + els[i] + "' is not a coordinate you silly!", false);
+                }
+            }
+            Vector3f raw = new Vector3f(pairs[0].getLeft(), pairs[1].getLeft(), pairs[2].getLeft());
+            return success(argName, new RelativeVector3f(raw, refPoint, pairs[0].getRight(), pairs[1].getRight(), pairs[2].getRight()));
         } catch (InvalidCommandArgumentException e) {
             throw failure(argName, e.getReason(), e.isSilenceable());
         }
     }
 
-    public Vector3f popVector3(String argName, Vector3f def) throws InvalidCommandArgumentException {
+    public static final String RELATIVE_COORD_PREFIX = "~";
+
+    protected Pair<Float, Boolean> parseRelativeFloat(String input) throws NumberFormatException {
+        float x = 0;
+        boolean rel = false;
+        if (input.startsWith(RELATIVE_COORD_PREFIX)) {
+            input = input.substring(RELATIVE_COORD_PREFIX.length());
+            rel = true;
+        }
+        if (!input.isEmpty()) {
+            x += Float.parseFloat(input);
+        }
+        return new ImmutablePair<>(x, rel);
+    }
+
+    public RelativeVector3f popVector3(String argName, RelativeVector3f def) throws InvalidCommandArgumentException {
         try {
             return popVector3(argName);
+        } catch (InvalidCommandArgumentException e) {
+            return potentialDefault(e, def);
+        }
+    }
+
+    public RelativeVector3f popVector3(String argName, Vector3f def) throws InvalidCommandArgumentException {
+        return popVector3(argName, new RelativeVector3f(def, false, false, false));
+    }
+
+    public RelativeVector3f popRelativeVector3(String argName, Vector3f refPoint, RelativeVector3f def) throws InvalidCommandArgumentException {
+        try {
+            return popRelativeVector3(argName, refPoint);
         } catch (InvalidCommandArgumentException e) {
             return potentialDefault(e, def);
         }
