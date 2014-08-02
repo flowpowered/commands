@@ -62,21 +62,21 @@
 
     <!-- Source code access -->
     <scm>
-        <connection>scm:git:git://github.com/flow/flow-chat-commands.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:flow/flow-chat-commands.git</developerConnection>
-        <url>https://github.com/flow/flow-chat-commands</url>
+        <connection>scm:git:git://github.com/flow/flow-commands.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:flow/flow-commands.git</developerConnection>
+        <url>https://github.com/flow/flow-commands</url>
     </scm>
 
     <!-- Continuous integration -->
     <ciManagement>
         <system>travis</system>
-        <url>https://travis-ci.org/flow/flow-chat-commands</url>
+        <url>https://travis-ci.org/flow/flow-commands</url>
     </ciManagement>
 
     <!-- Issue management -->
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/flow/flow-chat-commands/issues</url>
+        <url>https://github.com/flow/flow-commands/issues</url>
     </issueManagement>
 
 
