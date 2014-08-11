@@ -1,7 +1,7 @@
 /*
  * This file is part of Flow Commands, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2013 Spout LLC <http://www.spout.org/>
+ * Copyright (c) 2013 Spout LLC <https://spout.org/>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,9 +39,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import org.spout.cereal.config.Configuration;
-import org.spout.cereal.config.ConfigurationNode;
-import org.spout.cereal.config.ConfigurationNodeSource;
+import com.flowpowered.cerealization.config.Configuration;
+import com.flowpowered.cerealization.config.ConfigurationNode;
+import com.flowpowered.cerealization.config.ConfigurationNodeSource;
 
 public class ConfigurableCommandManager extends CommandManager {
     protected static final String COMMAND_SELF_KEY = "=";

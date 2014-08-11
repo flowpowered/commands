@@ -30,7 +30,7 @@
     <licenses>
         <license>
             <name>MIT License</name>
-            <url>http://www.tldrlegal.com/license/mit-license</url>
+            <url>https://tldrlegal.com/license/mit-license</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
@@ -38,7 +38,7 @@
     <!-- Organization information -->
     <organization>
         <name>Spout LLC</name>
-        <url>http://www.spout.org</url>
+        <url>https://spout.org</url>
     </organization>
 
     <!-- Project developers -->
@@ -79,7 +79,6 @@
         <url>https://github.com/flow/flow-commands/issues</url>
     </issueManagement>
 
-
     <!-- Dependency repositories -->
     <repositories>
         <repository>
@@ -114,6 +113,13 @@
 
     <!-- Project dependencies -->
     <dependencies>
+        <!-- Transitive -->
+        <dependency>
+            <groupId>com.flowpowered</groupId>
+            <artifactId>flow-cerealization</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>com.flowpowered</groupId>
             <artifactId>flow-chat</artifactId>
@@ -121,15 +127,10 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.spout</groupId>
-            <artifactId>cereal</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>12.0</version>
+            <version>17.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -209,22 +210,32 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <version>2.5</version>
                 <configuration>
                     <archive>
                         <manifestEntries>
                             <Specification-Title>${project.name}</Specification-Title>
                             <Specification-Version>${project.version}+${ciSystem}-b${buildNumber}.git-${commit}</Specification-Version>
-                            <Specification-Vendor>${project.organization.name}</Specification-Vendor>
+                            <Specification-Vendor>${project.organization.name} - ${project.organization.url}</Specification-Vendor>
                         </manifestEntries>
                     </archive>
+                </configuration>
+            </plugin>
+            <!-- Javadoc creation plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <author>false</author>
+                    <version>false</version>
                 </configuration>
             </plugin>
             <!-- Coveralls reporting plugin  -->
             <plugin>
                 <groupId>org.eluder.coveralls</groupId>
                 <artifactId>coveralls-maven-plugin</artifactId>
-                <version>2.1.0</version>
+                <version>2.2.0</version>
             </plugin>
             <!-- Cobertura test coverage plugin -->
             <plugin>
