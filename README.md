@@ -17,9 +17,9 @@ Or download the [latest zip archive](https://github.com/flow/flow-commands/archi
 
 ## Dependencies
 We love open-source libraries! This project uses are few of them to make things easier. If you aren't using Maven or Gradle, you'll need these!
-* [com.flowpowered:flow-cerealization](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.flowpowered%22%20AND%20a%3A%22flow-cerealization%22)
-* [com.flowpowered:flow-chat](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.flowpowered%22%20AND%20a%3A%22flow-chat%22)
-* [com.google.guava:guava](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.google.guava%22%20AND%20a%3A%22guava%22)
+* [com.flowpowered:flow-cerealization](https://oss.sonatype.org/#nexus-search;gav~com.flowpowered~flow-cerealization~~~)
+* [com.flowpowered:flow-chat](https://oss.sonatype.org/#nexus-search;gav~com.flowpowered~flow-chat~~~)
+* [com.google.guava:guava](https://oss.sonatype.org/#nexus-search;gav~com.google.guava~guava~~~)
 
 ## Building from Source
 This project can be built with the _latest_ [Java Development Kit](http://oracle.com/technetwork/java/javase/downloads) and [Maven](http://maven.apache.org/) or [Gradle](http://www.gradle.org/). Maven and Gradle are used to simplify dependency management, but using either of them is optional.
