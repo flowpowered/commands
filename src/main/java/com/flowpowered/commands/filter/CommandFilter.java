@@ -36,7 +36,7 @@ public interface CommandFilter {
      * Throws a CommandException if the execution should not continue.
      *
      * @param command command which is about to execute
-     * @param source source of command
+     * @param sender source of command
      * @param args command arguments
      * @throws CommandException if the execution should not continue
      */
