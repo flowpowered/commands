@@ -56,9 +56,10 @@ repositories {
 
 // Project dependencies
 dependencies {
-    compile 'commons-io:commons-io:2.4'
-    compile 'org.apache.commons:commons-lang3:3.3.2'
-    compile 'org.yaml:snakeyaml:1.13'
+    compile 'com.flowpowered:flow-cerealization:0.1.0-SNAPSHOT'
+    compile 'com.flowpowered:flow-chat:0.1.0-SNAPSHOT'
+    compile 'com.flowpowered:flow-commons:0.1.0-SNAPSHOT'
+    compile 'com.google.guava:guava:17.0'
 }
 
 // Filter, process, and include resources

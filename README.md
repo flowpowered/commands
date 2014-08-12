@@ -19,6 +19,7 @@ Or download the [latest zip archive](https://github.com/flow/flow-commands/archi
 We love open-source libraries! This project uses are few of them to make things easier. If you aren't using Maven or Gradle, you'll need these!
 * [com.flowpowered:flow-cerealization](https://oss.sonatype.org/#nexus-search;gav~com.flowpowered~flow-cerealization~~~)
 * [com.flowpowered:flow-chat](https://oss.sonatype.org/#nexus-search;gav~com.flowpowered~flow-chat~~~)
+* [com.flowpowered:flow-commons](https://oss.sonatype.org/#nexus-search;gav~com.flowpowered~flow-commons~~~)
 * [com.google.guava:guava](https://oss.sonatype.org/#nexus-search;gav~com.google.guava~guava~~~)
 
 ## Building from Source
@@ -52,7 +53,7 @@ If you do not already have the required repo in your repository list, you will n
 
     <repository>
         <id>sonatype-nexus</id>
-        <url>https://oss.sonatype.org/content/groups/public/</url>
+        <url>https://oss.sonatype.org/content/groups/public</url>
     </repository>
 
 If you're using [Gradle](http://www.gradle.org/) to manage project dependencies, simply include the following in your `build.gradle` file:
