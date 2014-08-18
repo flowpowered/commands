@@ -244,7 +244,7 @@ public class Command implements Named {
     }
 
     /**
-     * 
+     *
      * @return the simple name of this command, void of any periods or colons.
      */
     public String getSimpleName() {
@@ -447,7 +447,7 @@ public class Command implements Named {
         name = manager.normalizeChildName(name);
         this.childLock.writeLock().lock();
         try {
-            if (this.children.get(name) != null) {
+            if (this.children.get(name) != null) { // TODO: Fail silently if it's the same?
                 throw new ChildAlreadyExistException("Child already exists for name: " + name + " for command: " + this.name);
             }
             this.children.put(name, command);

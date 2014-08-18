@@ -96,14 +96,16 @@ public final class AnnotatedCommandExecutorFactory {
                 // create the command
                 CommandDescription a = method.getAnnotation(CommandDescription.class);
                 Command command = manager.getCommand(provider, a.name());
-                if (parent == null) {
-                    parent = manager.getRootCommand();
+                if (a.autoParent()) {
+                    if (parent == null) {
+                        parent = manager.getRootCommand();
+                    }
+                    parent.addChild(command);
                 }
-                parent.addChild(command);
 
                 // set annotation data
                 command.setDescription(a.desc());
-                command.setHelp(a.usage());
+                command.setUsage(a.usage());
                 command.setHelp(a.help());
                 // add the permissions
                 if (method.isAnnotationPresent(Permissible.class)) {
@@ -120,12 +122,43 @@ public final class AnnotatedCommandExecutorFactory {
                         } catch (InstantiationException e) {
                             throw new IllegalArgumentException("All CommandFilters must have an empty constructor.");
                         } catch (IllegalAccessException e) {
-                            e.printStackTrace();
+                            e.printStackTrace(); // TODO: logging
                         }
                     }
                     command.addFilters(filters);
                 }
 
+                String[] parents = null;
+                String[] childNames = null;
+
+                if (method.isAnnotationPresent(Parent.class)) {
+                    Parent cpa = method.getAnnotation(Parent.class);
+                    parents = cpa.value();
+                    childNames = cpa.childNames();
+
+                    if (childNames != null && childNames.length != parents.length) {
+                        // TODO: a warning? an exception?
+                        childNames = null;
+                    }
+                    if (childNames == null) {
+                        childNames = new String[parents.length];
+                    }
+                }
+
+                if (parents != null) {
+                    for (int i = 0; i < parents.length; ++i) {
+                        if (parents[i] == null || parents[i].isEmpty()) {
+                            continue;
+                        }
+                        Command parent1 = manager.getStoredCommand(parents[i]); // TODO: Get ourselves access to getCommand(String)
+                        if (childNames[i] == null || childNames[i].isEmpty()) {
+                            parent1.addChild(command);
+                        } else {
+                            parent1.addChildIfAbsent(childNames[i], command);
+                        }
+                    }
+
+                }
                 // put the command in our map
                 cmdMap.put(command, method);
             }
