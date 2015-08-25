@@ -1,0 +1,8 @@
+com.flowpowered.commands
+com.flowpowered.commands.annotated
+com.flowpowered.commands.exception
+com.flowpowered.commands.filter
+com.flowpowered.commands.flags
+com.flowpowered.commands.syntax
+com.flowpowered.commands.syntax.flags
+com.flowpowered.commands.util
