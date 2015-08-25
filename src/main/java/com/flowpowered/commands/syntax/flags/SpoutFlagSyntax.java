@@ -1,7 +1,7 @@
 /*
  * This file is part of Flow Commands, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2013 Spout LLC <https://spout.org/>
+ * Copyright (c) 2013 Flow Powered <https://flowpowered.com/>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,7 +84,9 @@ public class SpoutFlagSyntax implements FlagSyntax {
      *     <li>{@code --name [value]} - These must be defined in advance, can optionally have a value. Each 'word' contains one multicharacter flag name</li>
      * </ul>
      *
-     * @param it The iterator to source values from
+     * @param flags
+     * @param args
+     * @param curArgName
      * @param name The name of the argument
      * @param value A predefined argument, for the first type of flag (shown above)
      * @throws InvalidCommandArgumentException when an invalid flag is presented.
